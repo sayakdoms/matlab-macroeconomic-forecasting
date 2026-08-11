@@ -1,0 +1,12 @@
+Metric,Value
+Quarterly Observations,266
+Baseline R-Squared,0.0197694308583247
+Baseline Adjusted R-Squared,0.00854541670784748
+Dynamic R-Squared,0.669899592312793
+Dynamic Adjusted R-Squared,0.648342014667914
+Dynamic Model RMSE,2.39843296177717
+Pre-COVID RMSE Improvement vs Naive (%),5.57903785918579
+Pre-COVID MAE Improvement vs Naive (%),14.80679813388
+Structural Break F-Statistic,12.4343769850432
+Structural Break p-value,0
+Best Full-Sample OOS RMSE,11.5333506830437

@@ -1,0 +1,19 @@
+# MATLAB temporary files
+*.asv
+*.autosave
+*.m~
+
+# MATLAB generated folders
+slprj/
+codegen/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+
+# OneDrive temporary files
+~$*

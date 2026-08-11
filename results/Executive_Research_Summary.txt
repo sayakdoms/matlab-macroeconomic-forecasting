@@ -1,0 +1,20 @@
+MATLAB MACROECONOMETRICS PROJECT
+==============================================
+
+DATA
+266 quarterly U.S. macroeconomic observations from 1960 to 2026.
+
+BASELINE MODEL
+The contemporaneous OLS model achieved an R-squared of 0.0198 and an adjusted R-squared of 0.0085.
+
+DYNAMIC MODEL
+Introducing lagged macroeconomic relationships increased adjusted R-squared to 0.6483, with an RMSE of 2.3984.
+
+OUT-OF-SAMPLE FORECASTING
+During the stable 2016-2019 pre-COVID period, the econometric model improved RMSE by 5.58 percent and MAE by 14.81 percent relative to naive persistence.
+
+STRUCTURAL BREAK
+A structural-break test around 2020 produced an F-statistic of 12.4344 with p-value 0.000000, indicating substantial parameter instability around the pandemic shock.
+
+FINAL CONCLUSION
+Dynamic macroeconomic relationships substantially improve historical explanatory fit, but strong structural instability limits forecast generalization during major regime changes. Adaptive expanding-window estimation improves some forecast characteristics but does not consistently outperform naive persistence over the full post-2016 test period.
