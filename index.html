@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MATLAB macroeconometrics and GDP forecasting project using FRED data." />
+  <title>U.S. Macroeconomic Dynamics | MATLAB Econometrics Project</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <nav class="nav shell">
+      <div class="brand">Macroeconomics Lab</div>
+      <div class="nav-links">
+        <a href="#overview">Overview</a>
+        <a href="#findings">Findings</a>
+        <a href="#method">Method</a>
+        <a href="#visuals">Visuals</a>
+        <a href="https://github.com/sayakdoms/matlab-macroeconomic-forecasting">GitHub</a>
+      </div>
+    </nav>
+
+    <div class="hero-inner shell">
+      <div class="eyebrow">MATLAB · FRED · ECONOMETRICS · FORECASTING</div>
+      <h1>U.S. Macroeconomic Dynamics & GDP Growth Forecasting</h1>
+      <p class="lead">An end-to-end econometric study of growth, inflation, unemployment, interest rates, structural instability and out-of-sample forecasting using more than six decades of U.S. macroeconomic data.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="#dashboard">View Research Dashboard</a>
+        <a class="button secondary" href="https://github.com/sayakdoms/matlab-macroeconomic-forecasting">View Source Code</a>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><strong>266</strong><span>Quarterly observations</span></div>
+        <div class="kpi"><strong>64.83%</strong><span>Dynamic adjusted R²</span></div>
+        <div class="kpi"><strong>14.81%</strong><span>Pre-COVID MAE improvement</span></div>
+        <div class="kpi"><strong>12.43</strong><span>2020 break F-statistic</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="overview" class="section shell">
+      <div class="section-head">
+        <span class="section-label">Research overview</span>
+        <h2>Can historical macroeconomic relationships survive a regime change?</h2>
+      </div>
+      <div class="two-col">
+        <div>
+          <p>This project investigates how U.S. real GDP growth interacts with inflation, unemployment and monetary-policy conditions over time. The analysis begins with a simple contemporaneous OLS model, progressively introduces lag structures, and then tests those models on genuinely unseen data.</p>
+          <p>The core finding is intentionally nuanced: dynamic lag structures explain historical variation far better than a static regression, yet the 2020 shock exposes substantial instability and weakens forecast generalization.</p>
+        </div>
+        <div class="callout">
+          <span>Central research question</span>
+          <p>How do inflation, unemployment, interest rates and prior economic conditions relate to real GDP growth — and do those relationships remain useful for forecasting future growth?</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard" class="section muted">
+      <div class="shell">
+        <div class="section-head">
+          <span class="section-label">Executive dashboard</span>
+          <h2>The full empirical story in one view</h2>
+        </div>
+        <div class="image-frame hero-visual">
+          <img src="figures/39_Final_Research_Dashboard.png" alt="Final MATLAB macroeconomic research dashboard" />
+        </div>
+      </div>
+    </section>
+
+    <section id="findings" class="section shell">
+      <div class="section-head">
+        <span class="section-label">Key findings</span>
+        <h2>What the models actually revealed</h2>
+      </div>
+      <div class="cards">
+        <article class="card"><div class="card-num">01</div><h3>Static OLS was weak</h3><p>Same-quarter inflation, unemployment and interest rates explained little quarterly GDP-growth variation. Baseline R² was only <strong>1.98%</strong>.</p></article>
+        <article class="card"><div class="card-num">02</div><h3>Timing mattered</h3><p>Distributed lags dramatically improved historical fit, lifting adjusted R² to <strong>64.83%</strong>.</p></article>
+        <article class="card"><div class="card-num">03</div><h3>Forecasting was harder</h3><p>The high-fitting dynamic specification did not dominate a simple persistence benchmark over the complete unseen post-2016 sample.</p></article>
+        <article class="card"><div class="card-num">04</div><h3>Pre-COVID value existed</h3><p>During 2016–2019, the econometric model reduced MAE by <strong>14.81%</strong> and RMSE by <strong>5.58%</strong> versus persistence.</p></article>
+        <article class="card"><div class="card-num">05</div><h3>2020 was a structural break</h3><p>A Chow-style test produced <strong>F = 12.43</strong> with <strong>p &lt; 0.001</strong>, indicating strong parameter instability around the pandemic shock.</p></article>
+        <article class="card"><div class="card-num">06</div><h3>Adaptation only partly helped</h3><p>Expanding-window re-estimation improved RMSE slightly relative to the fixed model, but persistence remained the best full-sample benchmark.</p></article>
+      </div>
+    </section>
+
+    <section id="visuals" class="section muted">
+      <div class="shell">
+        <div class="section-head">
+          <span class="section-label">Selected visuals</span>
+          <h2>From economic history to structural instability</h2>
+        </div>
+        <div class="gallery">
+          <figure class="image-frame"><img src="figures/05_Macroeconomic_Dashboard.png" alt="Macroeconomic dashboard" /><figcaption>Macroeconomic overview</figcaption></figure>
+          <figure class="image-frame"><img src="figures/15_Lag_Model_R2_Comparison.png" alt="Lag model R squared comparison" /><figcaption>Lag-model performance</figcaption></figure>
+          <figure class="image-frame"><img src="figures/19_Dynamic_Model_Actual_vs_Predicted.png" alt="Dynamic model actual versus predicted" /><figcaption>Dynamic historical fit</figcaption></figure>
+          <figure class="image-frame"><img src="figures/29_Forecasts_and_COVID_Shock.png" alt="Forecasts and COVID shock" /><figcaption>Forecasts through the 2020 shock</figcaption></figure>
+          <figure class="image-frame"><img src="figures/30_Pre_vs_Post_COVID_Coefficients.png" alt="Pre and post COVID coefficients" /><figcaption>Structural coefficient shifts</figcaption></figure>
+          <figure class="image-frame"><img src="figures/35_Rolling_RMSE.png" alt="Rolling RMSE" /><figcaption>Rolling out-of-sample error</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="method" class="section shell">
+      <div class="section-head">
+        <span class="section-label">Methodology</span>
+        <h2>A reproducible 12-phase MATLAB pipeline</h2>
+      </div>
+      <div class="pipeline">
+        <div>FRED acquisition</div><span>→</span>
+        <div>Cleaning & quarterly harmonization</div><span>→</span>
+        <div>Exploratory analysis</div><span>→</span>
+        <div>Baseline OLS</div><span>→</span>
+        <div>Diagnostics</div><span>→</span>
+        <div>Lag comparison</div><span>→</span>
+        <div>Dynamic distributed lags</div><span>→</span>
+        <div>Out-of-sample forecast</div><span>→</span>
+        <div>Regime robustness</div><span>→</span>
+        <div>Structural break</div><span>→</span>
+        <div>Expanding-window forecast</div><span>→</span>
+        <div>Executive dashboard</div>
+      </div>
+    </section>
+
+    <section class="section dark-section">
+      <div class="shell">
+        <div class="section-head light">
+          <span class="section-label">Data & implementation</span>
+          <h2>Built for reproducibility, not just presentation</h2>
+        </div>
+        <div class="two-col light-copy">
+          <div>
+            <h3>Data</h3>
+            <p>Federal Reserve Economic Data (FRED): Real GDP <code>GDPC1</code>, Unemployment <code>UNRATE</code>, CPI <code>CPIAUCSL</code>, and Federal Funds Rate <code>FEDFUNDS</code>.</p>
+          </div>
+          <div>
+            <h3>Techniques</h3>
+            <p>OLS regression, VIF, Durbin–Watson, residual diagnostics, distributed lags, out-of-sample validation, benchmark comparison, structural-break testing, and expanding-window estimation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell">
+      <div class="final-cta">
+        <span class="section-label">Project repository</span>
+        <h2>Explore the MATLAB scripts, results and all 39 analytical figures.</h2>
+        <a class="button primary" href="https://github.com/sayakdoms/matlab-macroeconomic-forecasting">Open GitHub Repository</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <span>Sayak Pranab Ghosh</span>
+      <span>MBA · Department of Management Studies · IIT Roorkee</span>
+    </div>
+  </footer>
+</body>
+</html>
