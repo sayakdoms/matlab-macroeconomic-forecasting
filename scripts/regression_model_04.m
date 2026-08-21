@@ -1,5 +1,13 @@
+function output = regression_model_04(cfg)
+%REGRESSION_MODEL_04 Phase 4 - Baseline contemporaneous OLS model.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -19,10 +27,14 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 4: OLS Regression Analysis");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% Load cleaned dataset
 
 DATA = readtimetable( ...
-    fullfile("data","Macroeconomic_Data_Quarterly.csv"));
+    resolveDataInput(cfg,"Macroeconomic_Data_Quarterly.csv"));
+
+DATA = macro.validateQuarterlyData(DATA);
 
 disp("Clean quarterly dataset loaded successfully.");
 
@@ -46,67 +58,25 @@ X = [ ...
     Unemployment, ...
     InterestRate];
 
-%% Estimate OLS coefficients
+%% Estimate OLS model using the project's existing conventions
 
-beta = X \ Y;
+MODEL = macro.estimateOLS(X,Y,CovarianceSolver="inverse");
 
-%% Generate predicted values
-
-Y_hat = X * beta;
-
-%% Calculate residuals
-
-residuals = Y - Y_hat;
-
-%% Regression dimensions
-
-k = size(X,2);
-
-degreesFreedom = n - k;
-
-%% Sum of squared errors
-
-SSE = sum(residuals.^2);
-
-%% Total sum of squares
-
-SST = sum((Y - mean(Y)).^2);
-
-%% Regression sum of squares
-
-SSR = SST - SSE;
-
-%% R-squared
-
-R2 = 1 - SSE/SST;
-
-%% Adjusted R-squared
-
-AdjustedR2 = ...
-    1 - ((SSE/degreesFreedom) / ...
-    (SST/(n-1)));
-
-%% Estimate residual variance
-
-sigma2 = SSE / degreesFreedom;
-
-%% Variance-covariance matrix
-
-VarBeta = sigma2 * inv(X' * X);
-
-%% Standard errors
-
-StandardError = sqrt(diag(VarBeta));
-
-%% t-statistics
-
-TStatistic = beta ./ StandardError;
-
-%% Approximate two-sided p-values
-% Uses the normal approximation.
-% This avoids requiring Statistics and Machine Learning Toolbox.
-
-PValue = erfc(abs(TStatistic) ./ sqrt(2));
+beta = MODEL.Coefficients;
+Y_hat = MODEL.Fitted;
+residuals = MODEL.Residuals;
+k = MODEL.Parameters;
+degreesFreedom = MODEL.DegreesFreedom;
+SSE = MODEL.SSE;
+SST = MODEL.SST;
+SSR = MODEL.SSR;
+R2 = MODEL.RSquared;
+AdjustedR2 = MODEL.AdjustedRSquared;
+sigma2 = MODEL.ResidualVariance;
+VarBeta = MODEL.Covariance;
+StandardError = MODEL.StandardErrors;
+TStatistic = MODEL.TStatistics;
+PValue = MODEL.ApproxPValues;
 
 %% Create coefficient names
 
@@ -147,11 +117,8 @@ fprintf("Residual Standard Error: %.4f\n", sqrt(sigma2));
 
 %% Overall model F-statistic
 
-numberPredictors = k - 1;
-
-FStatistic = ...
-    (SSR / numberPredictors) / ...
-    (SSE / degreesFreedom);
+numberPredictors = k - 1; %#ok<NASGU>
+FStatistic = MODEL.FStatistic;
 
 fprintf("F-Statistic: %.4f\n", FStatistic);
 
@@ -159,7 +126,7 @@ fprintf("F-Statistic: %.4f\n", FStatistic);
 
 writetable( ...
     REGRESSION_RESULTS, ...
-    fullfile("results","OLS_Regression_Results.csv"));
+    fullfile(cfg.ResultsDir,"OLS_Regression_Results.csv"));
 
 %% Save model summary
 
@@ -178,7 +145,7 @@ MODEL_SUMMARY = table( ...
 
 writetable( ...
     MODEL_SUMMARY, ...
-    fullfile("results","OLS_Model_Summary.csv"));
+    fullfile(cfg.ResultsDir,"OLS_Model_Summary.csv"));
 
 %% Save actual, predicted and residual values
 
@@ -195,9 +162,11 @@ MODEL_OUTPUT = table( ...
 
 writetable( ...
     MODEL_OUTPUT, ...
-    fullfile("results","OLS_Predictions_Residuals.csv"));
+    fullfile(cfg.ResultsDir,"OLS_Predictions_Residuals.csv"));
 
 %% Figure 1 - Actual vs Predicted GDP Growth
+
+if cfg.GenerateFigures
 
 fig1 = figure( ...
     'Position',[100 100 1100 600]);
@@ -237,7 +206,7 @@ hold off;
 exportgraphics( ...
     fig1, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "07_Actual_vs_Predicted_GDP_Growth.png"), ...
     'Resolution',300);
 
@@ -266,7 +235,7 @@ ylabel("Residual");
 exportgraphics( ...
     fig2, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "08_OLS_Residuals.png"), ...
     'Resolution',300);
 
@@ -288,7 +257,7 @@ ylabel("Frequency");
 exportgraphics( ...
     fig3, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "09_Residual_Distribution.png"), ...
     'Resolution',300);
 
@@ -331,9 +300,11 @@ hold off;
 exportgraphics( ...
     fig4, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "10_Observed_vs_Fitted.png"), ...
     'Resolution',300);
+
+end
 
 %% Finish
 
@@ -354,3 +325,41 @@ disp("figures/07_Actual_vs_Predicted_GDP_Growth.png");
 disp("figures/08_OLS_Residuals.png");
 disp("figures/09_Residual_Distribution.png");
 disp("figures/10_Observed_vs_Fitted.png");
+
+output = struct("Model",MODEL, ...
+    "RegressionResults",REGRESSION_RESULTS, ...
+    "ModelSummary",MODEL_SUMMARY, ...
+    "ModelOutput",MODEL_OUTPUT, ...
+    "FigureFiles",[ ...
+        "07_Actual_vs_Predicted_GDP_Growth.png"; ...
+        "08_OLS_Residuals.png"; ...
+        "09_Residual_Distribution.png"; ...
+        "10_Observed_vs_Fitted.png"]);
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveDataInput(cfg,fileName)
+inputFile = fullfile(cfg.DataDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.SourceDataDir,fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase04:MissingInput", ...
+            "Required processed-data file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end

@@ -1,5 +1,13 @@
+function DATA = clean_transform_data_02(cfg)
+%CLEAN_TRANSFORM_DATA_02 Phase 2 - Clean and align macroeconomic data.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -10,12 +18,23 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 2: Data Cleaning & Transformation");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% Load raw datasets
 
-GDP   = readtable(fullfile("data","GDP_raw.csv"));
-UNEMP = readtable(fullfile("data","Unemployment_raw.csv"));
-CPI   = readtable(fullfile("data","CPI_raw.csv"));
-RATE  = readtable(fullfile("data","InterestRate_raw.csv"));
+GDP   = readtable(resolveDataInput(cfg,"GDP_raw.csv"));
+UNEMP = readtable(resolveDataInput(cfg,"Unemployment_raw.csv"));
+CPI   = readtable(resolveDataInput(cfg,"CPI_raw.csv"));
+RATE  = readtable(resolveDataInput(cfg,"InterestRate_raw.csv"));
+
+GDP = macro.validateRawFredTable(GDP,"GDPC1", ...
+    DataName="GDP raw data",AllowMissingObservations=true);
+UNEMP = macro.validateRawFredTable(UNEMP,"UNRATE", ...
+    DataName="unemployment raw data",AllowMissingObservations=true);
+CPI = macro.validateRawFredTable(CPI,"CPIAUCSL", ...
+    DataName="CPI raw data",AllowMissingObservations=true);
+RATE = macro.validateRawFredTable(RATE,"FEDFUNDS", ...
+    DataName="interest-rate raw data",AllowMissingObservations=true);
 
 disp("Raw datasets loaded successfully.");
 
@@ -100,6 +119,8 @@ startDate = datetime(1960,1,1);
 
 DATA = DATA(DATA.observation_date >= startDate,:);
 
+DATA = macro.validateQuarterlyData(DATA);
+
 %% Display cleaned dataset
 
 disp(" ");
@@ -141,7 +162,7 @@ fprintf("Average Interest Rate: %.2f %%\n", ...
 %% Save processed dataset
 
 outputFile = fullfile( ...
-    "data", ...
+    cfg.DataDir, ...
     "Macroeconomic_Data_Quarterly.csv");
 
 writetimetable(DATA, outputFile);
@@ -153,3 +174,31 @@ disp(outputFile);
 disp("==============================================");
 disp(" PHASE 2 COMPLETE");
 disp("==============================================");
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveDataInput(cfg,fileName)
+inputFile = fullfile(cfg.DataDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.SourceDataDir,fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase02:MissingInput", ...
+            "Required raw-data file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end

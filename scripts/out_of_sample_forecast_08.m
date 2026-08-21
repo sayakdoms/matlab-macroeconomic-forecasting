@@ -1,5 +1,13 @@
+function output = out_of_sample_forecast_08(cfg)
+%OUT_OF_SAMPLE_FORECAST_08 Phase 8 - Fixed out-of-sample forecast.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -16,10 +24,14 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 8: Out-of-Sample GDP Forecasting");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% Load cleaned quarterly dataset
 
 DATA = readtimetable( ...
-    fullfile("data","Macroeconomic_Data_Quarterly.csv"));
+    resolveDataInput(cfg,"Macroeconomic_Data_Quarterly.csv"));
+
+DATA = macro.validateQuarterlyData(DATA);
 
 disp("Quarterly dataset loaded successfully.");
 
@@ -37,50 +49,10 @@ disp("Quarterly dataset loaded successfully.");
 % No contemporaneous predictors are used.
 % ----------------------------------------------------------
 
-maxLag = 4;
-
-%% Raw series
-
-GDP = DATA.GDPGrowth;
-INF = DATA.Inflation;
-UNEMP = DATA.Unemployment;
-RATE = DATA.InterestRate;
-DATES = DATA.observation_date;
-
-%% Build forecast-ready dataset
-
-Y = GDP(maxLag+1:end);
-forecastDates = DATES(maxLag+1:end);
-
-% GDP lag
-GDP_L1 = GDP(maxLag:end-1);
-
-% Inflation lags
-INF_L1 = INF(maxLag:end-1);
-INF_L2 = INF(maxLag-1:end-2);
-INF_L3 = INF(maxLag-2:end-3);
-INF_L4 = INF(maxLag-3:end-4);
-
-% Unemployment lags
-UNEMP_L1 = UNEMP(maxLag:end-1);
-UNEMP_L2 = UNEMP(maxLag-1:end-2);
-UNEMP_L3 = UNEMP(maxLag-2:end-3);
-UNEMP_L4 = UNEMP(maxLag-3:end-4);
-
-% Interest rate lags
-RATE_L1 = RATE(maxLag:end-1);
-RATE_L2 = RATE(maxLag-1:end-2);
-RATE_L3 = RATE(maxLag-2:end-3);
-RATE_L4 = RATE(maxLag-3:end-4);
-
-%% Predictor matrix
-
-X = [ ...
-    ones(length(Y),1), ...
-    GDP_L1, ...
-    INF_L1, INF_L2, INF_L3, INF_L4, ...
-    UNEMP_L1, UNEMP_L2, UNEMP_L3, UNEMP_L4, ...
-    RATE_L1, RATE_L2, RATE_L3, RATE_L4];
+design = macro.buildForecastDesign(DATA);
+Y = design.Y;
+forecastDates = design.Dates;
+X = design.X;
 
 %% Split into training and test samples
 
@@ -110,53 +82,27 @@ fprintf("Test start date: %s\n", ...
 % Estimate forecasting model
 % ----------------------------------------------------------
 
-beta = X_train \ Y_train;
+MODEL = macro.estimateOLS(X_train,Y_train, ...
+    CovarianceSolver="inverse");
+beta = MODEL.Coefficients;
 
 %% Generate out-of-sample predictions
 
 Y_forecast = X_test * beta;
 
-forecastErrors = Y_test - Y_forecast;
+naiveForecast = X_test(:,2);
+METRICS = macro.forecastMetrics(Y_test,Y_forecast,naiveForecast);
 
-%% ---------------------------------------------------------
-% Forecast performance metrics
-% ----------------------------------------------------------
-
-RMSE = sqrt(mean(forecastErrors.^2));
-
-MAE = mean(abs(forecastErrors));
-
-ForecastCorrelation = corr(Y_test,Y_forecast);
-
-%% Directional accuracy
-
-actualDirection = sign(Y_test);
-forecastDirection = sign(Y_forecast);
-
-DirectionalAccuracy = ...
-    mean(actualDirection == forecastDirection) * 100;
-
-%% ---------------------------------------------------------
-% Naive benchmark
-%
-% Forecast GDP growth using previous quarter's GDP growth
-% ----------------------------------------------------------
-
-naiveForecast = GDP_L1(testIndex);
-
-naiveErrors = Y_test - naiveForecast;
-
-NaiveRMSE = sqrt(mean(naiveErrors.^2));
-
-NaiveMAE = mean(abs(naiveErrors));
-
-%% Improvement relative to naive forecast
-
-RMSEImprovement = ...
-    ((NaiveRMSE - RMSE) / NaiveRMSE) * 100;
-
-MAEImprovement = ...
-    ((NaiveMAE - MAE) / NaiveMAE) * 100;
+forecastErrors = METRICS.Errors;
+naiveErrors = METRICS.PersistenceErrors;
+RMSE = METRICS.RMSE;
+MAE = METRICS.MAE;
+ForecastCorrelation = METRICS.ForecastCorrelation;
+DirectionalAccuracy = METRICS.DirectionalAccuracy;
+NaiveRMSE = METRICS.NaiveRMSE;
+NaiveMAE = METRICS.NaiveMAE;
+RMSEImprovement = METRICS.RMSEImprovementPercent;
+MAEImprovement = METRICS.MAEImprovementPercent;
 
 %% ---------------------------------------------------------
 % Display forecast results
@@ -185,25 +131,7 @@ fprintf("MAE Improvement vs Naive: %.2f %%\n", ...
 % Save coefficient table
 % ----------------------------------------------------------
 
-Variable = [ ...
-    "Intercept"
-    "GDPGrowth_L1"
-
-    "Inflation_L1"
-    "Inflation_L2"
-    "Inflation_L3"
-    "Inflation_L4"
-
-    "Unemployment_L1"
-    "Unemployment_L2"
-    "Unemployment_L3"
-    "Unemployment_L4"
-
-    "InterestRate_L1"
-    "InterestRate_L2"
-    "InterestRate_L3"
-    "InterestRate_L4"
-    ];
+Variable = design.VariableNames';
 
 FORECAST_COEFFICIENTS = table( ...
     Variable, ...
@@ -214,7 +142,7 @@ FORECAST_COEFFICIENTS = table( ...
 writetable( ...
     FORECAST_COEFFICIENTS, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Forecast_Model_Coefficients.csv"));
 
 %% ---------------------------------------------------------
@@ -243,7 +171,7 @@ FORECAST_SUMMARY = table( ...
 writetable( ...
     FORECAST_SUMMARY, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Out_of_Sample_Forecast_Summary.csv"));
 
 %% ---------------------------------------------------------
@@ -266,12 +194,14 @@ FORECAST_RESULTS = table( ...
 writetable( ...
     FORECAST_RESULTS, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Out_of_Sample_Forecasts.csv"));
 
 %% ---------------------------------------------------------
 % Figure 23 - Actual vs Econometric Forecast
 % ----------------------------------------------------------
+
+if cfg.GenerateFigures
 
 fig1 = figure( ...
     'Position',[100 100 1200 650]);
@@ -311,7 +241,7 @@ hold off;
 exportgraphics( ...
     fig1, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "23_Out_of_Sample_Forecast.png"), ...
     'Resolution',300);
 
@@ -364,7 +294,7 @@ hold off;
 exportgraphics( ...
     fig2, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "24_Forecast_Model_Comparison.png"), ...
     'Resolution',300);
 
@@ -395,7 +325,7 @@ ylabel("Forecast Error");
 exportgraphics( ...
     fig3, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "25_Out_of_Sample_Forecast_Errors.png"), ...
     'Resolution',300);
 
@@ -418,9 +348,11 @@ ylabel("RMSE");
 exportgraphics( ...
     fig4, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "26_Forecast_RMSE_Comparison.png"), ...
     'Resolution',300);
+
+end
 
 %% Finish
 
@@ -441,3 +373,45 @@ disp("figures/23_Out_of_Sample_Forecast.png");
 disp("figures/24_Forecast_Model_Comparison.png");
 disp("figures/25_Out_of_Sample_Forecast_Errors.png");
 disp("figures/26_Forecast_RMSE_Comparison.png");
+
+output = struct("Design",design, ...
+    "TrainIndex",trainIndex, ...
+    "TestIndex",testIndex, ...
+    "Model",MODEL, ...
+    "Metrics",METRICS, ...
+    "ForecastCoefficients",FORECAST_COEFFICIENTS, ...
+    "ForecastSummary",FORECAST_SUMMARY, ...
+    "ForecastResults",FORECAST_RESULTS, ...
+    "FigureFiles",[ ...
+        "23_Out_of_Sample_Forecast.png"; ...
+        "24_Forecast_Model_Comparison.png"; ...
+        "25_Out_of_Sample_Forecast_Errors.png"; ...
+        "26_Forecast_RMSE_Comparison.png"]);
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveDataInput(cfg,fileName)
+inputFile = fullfile(cfg.DataDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.SourceDataDir,fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase08:MissingInput", ...
+            "Required processed-data file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end

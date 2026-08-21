@@ -1,5 +1,13 @@
+function output = exploratory_analysis_03(cfg)
+%EXPLORATORY_ANALYSIS_03 Phase 3 - Exploratory data analysis.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -10,10 +18,14 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 3: Exploratory Analysis");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% Load cleaned quarterly dataset
 
 DATA = readtimetable( ...
-    fullfile("data","Macroeconomic_Data_Quarterly.csv"));
+    resolveDataInput(cfg,"Macroeconomic_Data_Quarterly.csv"));
+
+DATA = macro.validateQuarterlyData(DATA);
 
 disp("Clean quarterly dataset loaded successfully.");
 
@@ -62,7 +74,7 @@ disp(DESCRIPTIVE);
 
 writetable( ...
     DESCRIPTIVE, ...
-    fullfile("results","Descriptive_Statistics.csv"));
+    fullfile(cfg.ResultsDir,"Descriptive_Statistics.csv"));
 
 disp("Descriptive statistics saved.");
 
@@ -88,12 +100,14 @@ disp(CORR_TABLE);
 
 writetable( ...
     CORR_TABLE, ...
-    fullfile("results","Correlation_Matrix.csv"), ...
+    fullfile(cfg.ResultsDir,"Correlation_Matrix.csv"), ...
     'WriteRowNames',true);
 
 disp("Correlation matrix saved.");
 
 %% Figure 1 - GDP Growth
+
+if cfg.GenerateFigures
 
 fig1 = figure;
 
@@ -114,7 +128,7 @@ ylabel("GDP Growth (%)");
 
 exportgraphics( ...
     fig1, ...
-    fullfile("figures","01_GDP_Growth.png"), ...
+    fullfile(cfg.FiguresDir,"01_GDP_Growth.png"), ...
     'Resolution',300);
 
 %% Figure 2 - Inflation
@@ -138,7 +152,7 @@ ylabel("Inflation (%)");
 
 exportgraphics( ...
     fig2, ...
-    fullfile("figures","02_Inflation.png"), ...
+    fullfile(cfg.FiguresDir,"02_Inflation.png"), ...
     'Resolution',300);
 
 %% Figure 3 - Unemployment
@@ -160,7 +174,7 @@ ylabel("Unemployment Rate (%)");
 
 exportgraphics( ...
     fig3, ...
-    fullfile("figures","03_Unemployment.png"), ...
+    fullfile(cfg.FiguresDir,"03_Unemployment.png"), ...
     'Resolution',300);
 
 %% Figure 4 - Federal Funds Rate
@@ -184,7 +198,7 @@ ylabel("Interest Rate (%)");
 
 exportgraphics( ...
     fig4, ...
-    fullfile("figures","04_Interest_Rate.png"), ...
+    fullfile(cfg.FiguresDir,"04_Interest_Rate.png"), ...
     'Resolution',300);
 
 %% Figure 5 - Macroeconomic Dashboard
@@ -258,7 +272,7 @@ sgtitle( ...
 
 exportgraphics( ...
     fig5, ...
-    fullfile("figures","05_Macroeconomic_Dashboard.png"), ...
+    fullfile(cfg.FiguresDir,"05_Macroeconomic_Dashboard.png"), ...
     'Resolution',300);
 
 %% Correlation heatmap
@@ -299,8 +313,10 @@ end
 
 exportgraphics( ...
     fig6, ...
-    fullfile("figures","06_Correlation_Heatmap.png"), ...
+    fullfile(cfg.FiguresDir,"06_Correlation_Heatmap.png"), ...
     'Resolution',300);
+
+end
 
 %% Finish
 
@@ -322,3 +338,43 @@ disp("figures/03_Unemployment.png");
 disp("figures/04_Interest_Rate.png");
 disp("figures/05_Macroeconomic_Dashboard.png");
 disp("figures/06_Correlation_Heatmap.png");
+
+figureFiles = [ ...
+    "01_GDP_Growth.png"; ...
+    "02_Inflation.png"; ...
+    "03_Unemployment.png"; ...
+    "04_Interest_Rate.png"; ...
+    "05_Macroeconomic_Dashboard.png"; ...
+    "06_Correlation_Heatmap.png"];
+output = struct("Data",DATA, ...
+    "DescriptiveStatistics",DESCRIPTIVE, ...
+    "CorrelationMatrix",CORR_TABLE, ...
+    "FigureFiles",figureFiles);
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveDataInput(cfg,fileName)
+inputFile = fullfile(cfg.DataDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.SourceDataDir,fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase03:MissingInput", ...
+            "Required processed-data file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end

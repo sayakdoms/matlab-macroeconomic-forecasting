@@ -1,5 +1,13 @@
+function output = final_research_dashboard_12(cfg)
+%FINAL_RESEARCH_DASHBOARD_12 Phase 12 - Executive research dashboard.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -14,30 +22,45 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 12: Final Research Dashboard");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% =========================================================
 % LOAD CORE DATA
 % ==========================================================
 
 DATA = readtimetable( ...
-    fullfile("data","Macroeconomic_Data_Quarterly.csv"));
+    resolveDataInput(cfg,"Macroeconomic_Data_Quarterly.csv"));
+
+DATA = macro.validateQuarterlyData(DATA);
 
 OLS_SUMMARY = readtable( ...
-    fullfile("results","OLS_Model_Summary.csv"));
+    resolveResultInput(cfg,"OLS_Model_Summary.csv"));
 
 DYNAMIC_SUMMARY = readtable( ...
-    fullfile("results","Dynamic_Model_Summary.csv"));
+    resolveResultInput(cfg,"Dynamic_Model_Summary.csv"));
 
 ROBUSTNESS = readtable( ...
-    fullfile("results","Forecast_Robustness_Results.csv"));
+    resolveResultInput(cfg,"Forecast_Robustness_Results.csv"));
 
 BREAK_TEST = readtable( ...
-    fullfile("results","Structural_Break_Test.csv"));
+    resolveResultInput(cfg,"Structural_Break_Test.csv"));
 
 LEADERBOARD = readtable( ...
-    fullfile("results","Expanding_Window_Model_Leaderboard.csv"));
+    resolveResultInput(cfg,"Expanding_Window_Model_Leaderboard.csv"));
 
 FORECASTS = readtable( ...
-    fullfile("results","Expanding_Window_Forecasts.csv"));
+    resolveResultInput(cfg,"Expanding_Window_Forecasts.csv"));
+
+macro.requireTableVariables(OLS_SUMMARY,["RSquared","AdjustedRSquared"]);
+macro.requireTableVariables(DYNAMIC_SUMMARY, ...
+    ["RSquared","AdjustedRSquared","RMSE"]);
+macro.requireTableVariables(ROBUSTNESS,[ ...
+    "Regime","ModelMAE","NaiveMAE", ...
+    "RMSEImprovementPercent","MAEImprovementPercent"]);
+macro.requireTableVariables(BREAK_TEST,["ChowFStatistic","ApproxPValue"]);
+macro.requireTableVariables(LEADERBOARD,["Model","RMSE"]);
+macro.requireTableVariables(FORECASTS,[ ...
+    "Date","ActualGDPGrowth","ExpandingForecast","NaiveForecast"]);
 
 disp("All project results loaded successfully.");
 
@@ -102,6 +125,8 @@ bestModelName = ...
 %% =========================================================
 % CREATE FINAL EXECUTIVE DASHBOARD
 % ==========================================================
+
+if cfg.GenerateFigures
 
 fig = figure( ...
     'Position',[50 40 1500 950]);
@@ -349,7 +374,7 @@ text( ...
 exportgraphics( ...
     fig, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "39_Final_Research_Dashboard.png"), ...
     'Resolution',300);
 
@@ -358,9 +383,11 @@ exportgraphics( ...
 exportgraphics( ...
     fig, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "39_Final_Research_Dashboard.pdf"), ...
     'ContentType','vector');
+
+end
 
 %% =========================================================
 % CREATE KPI SUMMARY TABLE
@@ -401,7 +428,7 @@ KPI_SUMMARY = table( ...
 writetable( ...
     KPI_SUMMARY, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Final_Project_KPIs.csv"));
 
 %% =========================================================
@@ -409,7 +436,7 @@ writetable( ...
 % ==========================================================
 
 summaryFile = fullfile( ...
-    "results", ...
+    cfg.ResultsDir, ...
     "Executive_Research_Summary.txt");
 
 fid = fopen(summaryFile,'w');
@@ -492,3 +519,54 @@ disp("results/Executive_Research_Summary.txt");
 
 disp(" ");
 disp("MATLAB ECONOMETRIC ANALYSIS PIPELINE COMPLETE.");
+
+output = struct("KPISummary",KPI_SUMMARY, ...
+    "BestModelName",bestModelName, ...
+    "BestRMSE",bestRMSE, ...
+    "ExecutiveSummaryFile",summaryFile, ...
+    "ResultFiles",[ ...
+        "Executive_Research_Summary.txt"; ...
+        "Final_Project_KPIs.csv"], ...
+    "FigureFiles",[ ...
+        "39_Final_Research_Dashboard.pdf"; ...
+        "39_Final_Research_Dashboard.png"]);
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveDataInput(cfg,fileName)
+inputFile = fullfile(cfg.DataDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.SourceDataDir,fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase12:MissingDataInput", ...
+            "Required processed-data file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end
+
+function inputFile = resolveResultInput(cfg,fileName)
+inputFile = fullfile(cfg.ResultsDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.ProjectRoot,"results",fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase12:MissingResultInput", ...
+            "Required result file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end

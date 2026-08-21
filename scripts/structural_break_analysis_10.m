@@ -1,5 +1,13 @@
+function output = structural_break_analysis_10(cfg)
+%STRUCTURAL_BREAK_ANALYSIS_10 Phase 10 - Fixed-date Chow-style test.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -14,10 +22,14 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 10: Structural Break Analysis");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% Load cleaned quarterly dataset
 
 DATA = readtimetable( ...
-    fullfile("data","Macroeconomic_Data_Quarterly.csv"));
+    resolveDataInput(cfg,"Macroeconomic_Data_Quarterly.csv"));
+
+DATA = macro.validateQuarterlyData(DATA);
 
 disp("Dataset loaded successfully.");
 
@@ -25,52 +37,10 @@ disp("Dataset loaded successfully.");
 % Build forecasting-style lagged model
 % ----------------------------------------------------------
 
-maxLag = 4;
-
-GDP   = DATA.GDPGrowth;
-INF   = DATA.Inflation;
-UNEMP = DATA.Unemployment;
-RATE  = DATA.InterestRate;
-DATES = DATA.observation_date;
-
-%% Response
-
-Y = GDP(maxLag+1:end);
-modelDates = DATES(maxLag+1:end);
-
-%% Lagged GDP growth
-
-GDP_L1 = GDP(maxLag:end-1);
-
-%% Inflation lags
-
-INF_L1 = INF(maxLag:end-1);
-INF_L2 = INF(maxLag-1:end-2);
-INF_L3 = INF(maxLag-2:end-3);
-INF_L4 = INF(maxLag-3:end-4);
-
-%% Unemployment lags
-
-UNEMP_L1 = UNEMP(maxLag:end-1);
-UNEMP_L2 = UNEMP(maxLag-1:end-2);
-UNEMP_L3 = UNEMP(maxLag-2:end-3);
-UNEMP_L4 = UNEMP(maxLag-3:end-4);
-
-%% Interest-rate lags
-
-RATE_L1 = RATE(maxLag:end-1);
-RATE_L2 = RATE(maxLag-1:end-2);
-RATE_L3 = RATE(maxLag-2:end-3);
-RATE_L4 = RATE(maxLag-3:end-4);
-
-%% Predictor matrix
-
-X = [ ...
-    ones(length(Y),1), ...
-    GDP_L1, ...
-    INF_L1, INF_L2, INF_L3, INF_L4, ...
-    UNEMP_L1, UNEMP_L2, UNEMP_L3, UNEMP_L4, ...
-    RATE_L1, RATE_L2, RATE_L3, RATE_L4];
+design = macro.buildForecastDesign(DATA);
+Y = design.Y;
+modelDates = design.Dates;
+X = design.X;
 
 %% ---------------------------------------------------------
 % Define structural break
@@ -94,37 +64,28 @@ fprintf("Post-break observations: %d\n", length(Y_post));
 % Pooled model
 % ----------------------------------------------------------
 
-betaPooled = X \ Y;
-
-residualPooled = ...
-    Y - X*betaPooled;
-
-SSE_Pooled = ...
-    sum(residualPooled.^2);
+POOLED_MODEL = macro.estimateOLS(X,Y,CovarianceSolver="inverse");
+betaPooled = POOLED_MODEL.Coefficients;
+residualPooled = POOLED_MODEL.Residuals;
+SSE_Pooled = POOLED_MODEL.SSE;
 
 %% ---------------------------------------------------------
 % Pre-COVID model
 % ----------------------------------------------------------
 
-betaPre = X_pre \ Y_pre;
-
-residualPre = ...
-    Y_pre - X_pre*betaPre;
-
-SSE_Pre = ...
-    sum(residualPre.^2);
+PRE_MODEL = macro.estimateOLS(X_pre,Y_pre,CovarianceSolver="inverse");
+betaPre = PRE_MODEL.Coefficients;
+residualPre = PRE_MODEL.Residuals;
+SSE_Pre = PRE_MODEL.SSE;
 
 %% ---------------------------------------------------------
 % Post-COVID model
 % ----------------------------------------------------------
 
-betaPost = X_post \ Y_post;
-
-residualPost = ...
-    Y_post - X_post*betaPost;
-
-SSE_Post = ...
-    sum(residualPost.^2);
+POST_MODEL = macro.estimateOLS(X_post,Y_post,CovarianceSolver="inverse");
+betaPost = POST_MODEL.Coefficients;
+residualPost = POST_MODEL.Residuals;
+SSE_Post = POST_MODEL.SSE;
 
 %% ---------------------------------------------------------
 % Chow-style structural-break F statistic
@@ -174,34 +135,16 @@ fprintf("Approximate p-value: %.6f\n",ChowPValue);
 % Calculate model fit by regime
 % ----------------------------------------------------------
 
-YhatPre = X_pre * betaPre;
-YhatPost = X_post * betaPost;
-
-SST_Pre = ...
-    sum((Y_pre - mean(Y_pre)).^2);
-
-SST_Post = ...
-    sum((Y_post - mean(Y_post)).^2);
-
-R2_Pre = ...
-    1 - SSE_Pre/SST_Pre;
-
-R2_Post = ...
-    1 - SSE_Post/SST_Post;
-
-AdjR2_Pre = ...
-    1 - ((SSE_Pre/(n1-k)) / ...
-    (SST_Pre/(n1-1)));
-
-AdjR2_Post = ...
-    1 - ((SSE_Post/(n2-k)) / ...
-    (SST_Post/(n2-1)));
-
-RMSE_Pre = ...
-    sqrt(mean((Y_pre-YhatPre).^2));
-
-RMSE_Post = ...
-    sqrt(mean((Y_post-YhatPost).^2));
+YhatPre = PRE_MODEL.Fitted;
+YhatPost = POST_MODEL.Fitted;
+SST_Pre = PRE_MODEL.SST;
+SST_Post = POST_MODEL.SST;
+R2_Pre = PRE_MODEL.RSquared;
+R2_Post = POST_MODEL.RSquared;
+AdjR2_Pre = PRE_MODEL.AdjustedRSquared;
+AdjR2_Post = POST_MODEL.AdjustedRSquared;
+RMSE_Pre = PRE_MODEL.RMSE;
+RMSE_Post = POST_MODEL.RMSE;
 
 %% Save regime summary
 
@@ -228,32 +171,14 @@ disp(REGIME_SUMMARY);
 writetable( ...
     REGIME_SUMMARY, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Structural_Break_Regime_Summary.csv"));
 
 %% ---------------------------------------------------------
 % Coefficient comparison
 % ----------------------------------------------------------
 
-Variable = [ ...
-    "Intercept"
-    "GDPGrowth_L1"
-
-    "Inflation_L1"
-    "Inflation_L2"
-    "Inflation_L3"
-    "Inflation_L4"
-
-    "Unemployment_L1"
-    "Unemployment_L2"
-    "Unemployment_L3"
-    "Unemployment_L4"
-
-    "InterestRate_L1"
-    "InterestRate_L2"
-    "InterestRate_L3"
-    "InterestRate_L4"
-    ];
+Variable = design.VariableNames';
 
 COEFFICIENT_COMPARISON = table( ...
     Variable, ...
@@ -276,7 +201,7 @@ disp(COEFFICIENT_COMPARISON);
 writetable( ...
     COEFFICIENT_COMPARISON, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Structural_Break_Coefficients.csv"));
 
 %% Save structural-break test summary
@@ -293,12 +218,14 @@ BREAK_SUMMARY = table( ...
 writetable( ...
     BREAK_SUMMARY, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Structural_Break_Test.csv"));
 
 %% ---------------------------------------------------------
 % Figure 30 - Coefficient comparison
 % ----------------------------------------------------------
+
+if cfg.GenerateFigures
 
 fig1 = figure( ...
     'Position',[100 100 1350 700]);
@@ -329,7 +256,7 @@ xtickangle(45);
 exportgraphics( ...
     fig1, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "30_Pre_vs_Post_COVID_Coefficients.png"), ...
     'Resolution',300);
 
@@ -361,7 +288,7 @@ xtickangle(45);
 exportgraphics( ...
     fig2, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "31_Structural_Coefficient_Change.png"), ...
     'Resolution',300);
 
@@ -384,7 +311,7 @@ ylabel("Adjusted R-Squared");
 exportgraphics( ...
     fig3, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "32_Regime_Adjusted_R2.png"), ...
     'Resolution',300);
 
@@ -422,9 +349,11 @@ hold off;
 exportgraphics( ...
     fig4, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "33_GDP_Growth_Structural_Break.png"), ...
     'Resolution',300);
+
+end
 
 %% Finish
 
@@ -445,3 +374,47 @@ disp("figures/30_Pre_vs_Post_COVID_Coefficients.png");
 disp("figures/31_Structural_Coefficient_Change.png");
 disp("figures/32_Regime_Adjusted_R2.png");
 disp("figures/33_GDP_Growth_Structural_Break.png");
+
+output = struct("Design",design, ...
+    "BreakDate",breakDate, ...
+    "PreIndex",preIndex, ...
+    "PostIndex",postIndex, ...
+    "PooledModel",POOLED_MODEL, ...
+    "PreModel",PRE_MODEL, ...
+    "PostModel",POST_MODEL, ...
+    "RegimeSummary",REGIME_SUMMARY, ...
+    "CoefficientComparison",COEFFICIENT_COMPARISON, ...
+    "BreakSummary",BREAK_SUMMARY, ...
+    "FigureFiles",[ ...
+        "30_Pre_vs_Post_COVID_Coefficients.png"; ...
+        "31_Structural_Coefficient_Change.png"; ...
+        "32_Regime_Adjusted_R2.png"; ...
+        "33_GDP_Growth_Structural_Break.png"]);
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveDataInput(cfg,fileName)
+inputFile = fullfile(cfg.DataDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.SourceDataDir,fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase10:MissingInput", ...
+            "Required processed-data file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end

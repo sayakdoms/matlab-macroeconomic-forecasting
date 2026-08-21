@@ -1,5 +1,13 @@
+function output = forecast_robustness_09(cfg)
+%FORECAST_ROBUSTNESS_09 Phase 9 - Forecast robustness by regime.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -10,10 +18,15 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 9: Forecast Robustness Analysis");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% Load previously generated forecasts
 
 RESULTS = readtable( ...
-    fullfile("results","Out_of_Sample_Forecasts.csv"));
+    resolveResultInput(cfg,"Out_of_Sample_Forecasts.csv"));
+
+macro.requireTableVariables(RESULTS,[ ...
+    "Date","ActualGDPGrowth","EconometricForecast","NaiveForecast"]);
 
 %% Convert date variable
 
@@ -81,30 +94,16 @@ for r = 1:numRegimes
     model = modelForecast(idx);
     naive = naiveForecast(idx);
 
-    modelError = y - model;
-    naiveError = y - naive;
+    metrics = macro.forecastMetrics(y,model,naive);
 
     Observations(r) = sum(idx);
 
-    ModelRMSE(r) = ...
-        sqrt(mean(modelError.^2));
-
-    NaiveRMSE(r) = ...
-        sqrt(mean(naiveError.^2));
-
-    ModelMAE(r) = ...
-        mean(abs(modelError));
-
-    NaiveMAE(r) = ...
-        mean(abs(naiveError));
-
-    RMSEImprovement(r) = ...
-        ((NaiveRMSE(r) - ModelRMSE(r)) ...
-        / NaiveRMSE(r)) * 100;
-
-    MAEImprovement(r) = ...
-        ((NaiveMAE(r) - ModelMAE(r)) ...
-        / NaiveMAE(r)) * 100;
+    ModelRMSE(r) = metrics.RMSE;
+    NaiveRMSE(r) = metrics.NaiveRMSE;
+    ModelMAE(r) = metrics.MAE;
+    NaiveMAE(r) = metrics.NaiveMAE;
+    RMSEImprovement(r) = metrics.RMSEImprovementPercent;
+    MAEImprovement(r) = metrics.MAEImprovementPercent;
 
 end
 
@@ -141,10 +140,12 @@ disp(ROBUSTNESS);
 writetable( ...
     ROBUSTNESS, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Forecast_Robustness_Results.csv"));
 
 %% Figure 27 - RMSE by regime
+
+if cfg.GenerateFigures
 
 fig1 = figure( ...
     'Position',[100 100 1200 650]);
@@ -170,7 +171,7 @@ legend( ...
 exportgraphics( ...
     fig1, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "27_Forecast_RMSE_by_Regime.png"), ...
     'Resolution',300);
 
@@ -200,7 +201,7 @@ legend( ...
 exportgraphics( ...
     fig2, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "28_Forecast_MAE_by_Regime.png"), ...
     'Resolution',300);
 
@@ -258,9 +259,11 @@ hold off;
 exportgraphics( ...
     fig3, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "29_Forecasts_and_COVID_Shock.png"), ...
     'Resolution',300);
+
+end
 
 %% Finish
 
@@ -278,3 +281,38 @@ disp("Figures saved:");
 disp("figures/27_Forecast_RMSE_by_Regime.png");
 disp("figures/28_Forecast_MAE_by_Regime.png");
 disp("figures/29_Forecasts_and_COVID_Shock.png");
+
+output = struct("Robustness",ROBUSTNESS, ...
+    "RegimeIndices",{indices}, ...
+    "FigureFiles",[ ...
+        "27_Forecast_RMSE_by_Regime.png"; ...
+        "28_Forecast_MAE_by_Regime.png"; ...
+        "29_Forecasts_and_COVID_Shock.png"]);
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveResultInput(cfg,fileName)
+inputFile = fullfile(cfg.ResultsDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.ProjectRoot,"results",fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase09:MissingInput", ...
+            "Required result file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end

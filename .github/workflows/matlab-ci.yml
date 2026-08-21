@@ -1,0 +1,58 @@
+name: MATLAB CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matlab-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: MATLAB R2026a test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up MATLAB R2026a
+        uses: matlab-actions/setup-matlab@v3
+        with:
+          release: R2026a
+          products: >-
+            Statistics_and_Machine_Learning_Toolbox
+            Econometrics_Toolbox
+          cache: true
+
+      - name: Prepare isolated test workspace
+        shell: bash
+        run: |
+          test_root="${RUNNER_TEMP}/matlab-project"
+          mkdir -p "${test_root}"
+          cp -a "${GITHUB_WORKSPACE}/." "${test_root}/"
+          echo "MATLAB_TEST_ROOT=${test_root}" >> "${GITHUB_ENV}"
+
+      - name: Run complete MATLAB test suite
+        uses: matlab-actions/run-command@v3
+        with:
+          command: cd(getenv("MATLAB_TEST_ROOT")); addpath("tests"); results = run_tests; disp(table(results)); assertSuccess(results);
+
+      - name: Verify repository checkout is unchanged
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "The MATLAB test suite changed the repository checkout."
+            git status --short
+            exit 1
+          fi

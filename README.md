@@ -1,26 +1,30 @@
 # U.S. Macroeconomic Dynamics & GDP Growth Forecasting in MATLAB
 
 [![MATLAB](https://img.shields.io/badge/MATLAB-R2026a-orange)](https://www.mathworks.com/products/matlab.html)
+[![MATLAB CI](https://github.com/sayakdoms/matlab-macroeconomic-forecasting/actions/workflows/matlab-ci.yml/badge.svg)](https://github.com/sayakdoms/matlab-macroeconomic-forecasting/actions/workflows/matlab-ci.yml)
 [![Data](https://img.shields.io/badge/Data-FRED-blue)](https://fred.stlouisfed.org/)
-[![Status](https://img.shields.io/badge/Project-Complete-success)](#)
+[![Tests](https://img.shields.io/badge/tests-97%20passing-success)](#testing)
 
-An end-to-end **macroeconometrics and forecasting project in MATLAB** using U.S. Federal Reserve Economic Data (FRED). The project studies how GDP growth interacts dynamically with inflation, unemployment, and monetary-policy conditions, then tests whether those relationships remain useful when forecasting genuinely unseen data.
+## Project overview
 
-The central result is deliberately not a perfect forecasting story: dynamic lag structures improve historical explanatory fit dramatically, but the COVID-era break reveals substantial instability and limits out-of-sample generalization. That contrast between **in-sample fit, forecast validation, and structural change** is the core of the project.
+This repository is a reproducible 12-phase macroeconometrics and forecasting study built in MATLAB. It combines public U.S. Federal Reserve Economic Data (FRED), quarterly data engineering, classical OLS, distributed lags, structural-break analysis, benchmarked out-of-sample forecasts, expanding-window estimation, diagnostics, and portfolio-ready reporting.
 
-## Executive Research Dashboard
+The central result is deliberately nuanced: dynamic lag structures explain substantially more historical GDP-growth variation than a static contemporaneous model, but that improvement does not translate into forecast dominance over a simple persistence benchmark across the full post-2016 test period. The COVID-era break exposes substantial parameter instability.
 
-![Final Research Dashboard](figures/39_Final_Research_Dashboard.png)
+The project now has a single entry point, configuration-aware phase functions, reusable helpers, validation checks, and end-to-end parity tests. It can run from any MATLAB working directory once the repository root is on the MATLAB path.
 
-A vector PDF version is also available at [`figures/39_Final_Research_Dashboard.pdf`](figures/39_Final_Research_Dashboard.pdf).
+## Research question
 
-## Research Question
+> How do inflation, unemployment, interest rates, and prior economic conditions relate to U.S. real GDP growth over time, and can information available before a forecast quarter improve genuinely out-of-sample GDP-growth predictions?
 
-> **How do inflation, unemployment, interest rates, and prior economic conditions relate to U.S. real GDP growth over time, and can lagged macroeconomic information improve out-of-sample GDP-growth forecasts?**
+This question is evaluated through two deliberately separate model classes:
 
-## Headline Results
+- **Explanatory/in-sample models** measure conditional historical relationships. The Phase 4 baseline uses contemporaneous variables, and the Phase 7 dynamic model includes contemporaneous and lagged regressors. These specifications are not presented as real-time forecasting models.
+- **Forecast-feasible out-of-sample models** use only information from `t-1` or earlier. Phases 8 and 11 train before 2016 and evaluate observations from 2016 onward without contemporaneous predictor leakage.
 
-| Finding | Result |
+## Key findings
+
+| Finding | Committed result |
 |---|---:|
 | Quarterly observations | **266** |
 | Baseline contemporaneous OLS R² | **1.98%** |
@@ -30,236 +34,193 @@ A vector PDF version is also available at [`figures/39_Final_Research_Dashboard.
 | Dynamic model RMSE | **2.40** |
 | Pre-COVID RMSE improvement vs persistence | **5.58%** |
 | Pre-COVID MAE improvement vs persistence | **14.81%** |
-| 2020 structural-break F-statistic | **12.43** |
+| Fixed 2020 structural-break F-statistic | **12.43** |
 | Structural-break significance | **p < 0.001** |
 | Best full-test-sample RMSE | **11.53 — naive persistence** |
 
-## Key Findings
+The baseline contemporaneous model explains little quarterly GDP-growth variation. Adding GDP-growth persistence and distributed macroeconomic lags raises historical fit sharply, showing that timing matters for explanatory modeling. That higher in-sample fit should not be read as proof of forecasting power.
 
-### 1. Static contemporaneous relationships explain little GDP-growth variation
+For the pre-2016 fixed-coefficient model, full-test-sample RMSE is approximately **11.95**. Recursive expanding-window estimation lowers it slightly to approximately **11.79**, but naive persistence remains best at approximately **11.53**. During the comparatively stable 2016–2019 period, however, the econometric forecast improves on persistence by **5.58% on RMSE** and **14.81% on MAE**. Forecast performance is therefore regime-dependent rather than uniformly superior.
 
-The baseline OLS model regressing current GDP growth on current inflation, unemployment, and the federal funds rate produced an R² of only **1.98%** and an adjusted R² of **0.85%**. This suggests that same-quarter macroeconomic variables alone provide limited explanatory power for quarterly real GDP growth.
+The fixed 2020 Q1 Chow-style breakpoint produces an F-statistic of approximately **12.43** with **p < 0.001**. This supports the project’s headline conclusion: dynamic relationships substantially improve historical explanatory fit, while structural instability limits forecast generalization during major shocks.
 
-### 2. Timing and lag structure matter substantially
+![Final research dashboard](figures/39_Final_Research_Dashboard.png)
 
-Once dynamic effects were introduced, historical model fit improved sharply. The distributed-lag specification achieved an R² of **66.99%** and an adjusted R² of **64.83%**.
+A vector version is available at [`figures/39_Final_Research_Dashboard.pdf`](figures/39_Final_Research_Dashboard.pdf).
 
-This improvement is interpreted as evidence that macroeconomic relationships are strongly time-dependent — **not** as proof that the model is automatically a strong forecaster.
-
-![Dynamic Model](figures/19_Dynamic_Model_Actual_vs_Predicted.png)
-
-### 3. High in-sample fit did not translate into full-sample forecasting dominance
-
-A true out-of-sample test was created using a pre-2016 training sample and unseen observations from 2016 onward. The econometric forecast did **not** beat a naive persistence forecast across the entire test window.
-
-That distinction is central to the project: historical fit and genuine predictive performance are evaluated separately.
-
-![Forecast Comparison](figures/24_Forecast_Model_Comparison.png)
-
-### 4. Forecast performance was regime-dependent
-
-During the relatively stable **2016–2019 pre-COVID period**, the lag-based econometric model improved on naive persistence by approximately:
-
-- **5.58% on RMSE**
-- **14.81% on MAE**
-
-Performance deteriorated sharply during the 2020 shock and remained weaker than persistence in the post-COVID regime.
-
-![Forecast Robustness](figures/29_Forecasts_and_COVID_Shock.png)
-
-### 5. The 2020 period exhibits strong structural instability
-
-A manually implemented Chow-style structural-break test around 2020 produced an F-statistic of approximately **12.43** with **p < 0.001**, providing strong evidence that the regression relationships were unstable across the specified breakpoint.
-
-The pre/post coefficient comparison reinforces this regime-shift interpretation.
-
-![Structural Break Coefficients](figures/30_Pre_vs_Post_COVID_Coefficients.png)
-
-### 6. Adaptive re-estimation helped, but did not fully solve the forecasting problem
-
-An expanding-window model re-estimated coefficients before each forecast. It improved RMSE slightly relative to the fixed historical specification, but still did not outperform naive persistence over the full post-2016 test period.
-
-This supports a broader conclusion: **adaptive estimation can reduce some parameter staleness, but extreme structural change remains difficult to forecast with a compact linear macroeconomic model.**
-
-![Rolling RMSE](figures/35_Rolling_RMSE.png)
-
-## Data
-
-The project uses public U.S. macroeconomic series downloaded directly from **Federal Reserve Economic Data (FRED)**:
-
-| Series | FRED ID | Role in project |
-|---|---|---|
-| Real Gross Domestic Product | `GDPC1` | GDP level and quarterly growth |
-| Unemployment Rate | `UNRATE` | Labor-market condition |
-| Consumer Price Index | `CPIAUCSL` | Inflation calculation |
-| Federal Funds Effective Rate | `FEDFUNDS` | Monetary-policy condition |
-
-Monthly series are converted to quarterly frequency and synchronized with quarterly real GDP. GDP growth and inflation are calculated using annualized quarterly log differences.
-
-Raw downloads are retained in [`data/`](data/) alongside the processed quarterly modelling dataset.
-
-## Methodology
+## Repository structure
 
 ```text
-FRED data acquisition
-        ↓
-Raw-data preservation
-        ↓
-Date cleaning & frequency harmonization
-        ↓
-Quarterly GDP-growth / inflation transformations
-        ↓
-Exploratory data analysis
-        ↓
-Baseline OLS regression
-        ↓
-Residual & multicollinearity diagnostics
-        ↓
-Lag-length comparison
-        ↓
-Dynamic distributed-lag regression
-        ↓
-True out-of-sample forecasting
-        ↓
-Naive persistence benchmark
-        ↓
-Regime robustness analysis
-        ↓
-2020 structural-break analysis
-        ↓
-Expanding-window adaptive forecasting
-        ↓
-Executive research dashboard
-```
-
-## Econometric Diagnostics
-
-The baseline specification includes checks for:
-
-- Durbin–Watson residual autocorrelation
-- Variance Inflation Factors (VIF)
-- Jarque–Bera residual normality
-- residual autocorrelation function
-- residual-vs-fitted behavior
-- Q–Q diagnostics
-- standardized residuals
-
-The baseline diagnostics showed low multicollinearity (maximum VIF approximately **1.61**) and a Durbin–Watson statistic near **1.87**, while residual normality was rejected — consistent with the presence of large macroeconomic shocks.
-
-![Residual ACF](figures/11_Residual_ACF.png)
-
-## Lag Analysis
-
-Simple models using common lags from zero through four quarters were compared using R², adjusted R², RMSE, AIC, BIC, and F-statistics. A one-quarter lag produced the strongest adjusted R² among those simple common-lag specifications.
-
-![Lag Model Comparison](figures/15_Lag_Model_R2_Comparison.png)
-
-The project then moved to a richer distributed-lag model allowing different historical observations to enter simultaneously.
-
-![Coefficient Paths](figures/17_Coefficient_Paths_Across_Lags.png)
-
-## Adaptive Forecasting
-
-The final forecasting stage compares three approaches:
-
-1. **Fixed historical model** — coefficients estimated once using the initial training sample.
-2. **Expanding-window model** — coefficients re-estimated before every one-step-ahead forecast.
-3. **Naive persistence** — next-quarter growth equals previous-quarter growth.
-
-The expanding-window model slightly reduced RMSE relative to the fixed model, but naive persistence remained the strongest full-sample benchmark.
-
-![Adaptive Forecast Comparison](figures/34_Adaptive_Forecast_Comparison.png)
-
-![Cumulative Forecast Error](figures/38_Cumulative_Forecast_Error.png)
-
-## Project Structure
-
-```text
-matlab-macroeconomic-forecasting/
-│
-├── data/       # Raw FRED series and processed quarterly dataset
-├── figures/    # 39 analytical visualizations + final dashboard PDF
-├── results/    # Model outputs, diagnostics, forecasts and KPI tables
-├── scripts/    # 12 sequential MATLAB analysis scripts
-├── .gitignore
+Macroeconomics_Econometrics_MATLAB/
+├── run_all.m                 # One-command entry point and execution summary
+├── scripts/                  # Twelve independently callable phase functions
+├── src/+macro/               # Configuration, validation, design and statistics helpers
+├── tests/                    # Unit, phase-parity and end-to-end tests
+├── data/                     # Four raw snapshots and processed quarterly data
+├── results/                  # CSV model outputs, diagnostics, forecasts and text summary
+├── figures/                  # Analytical PNGs and vector dashboard PDF
+├── index.html                # Portfolio/GitHub Pages site
+├── styles.css                # Portfolio-site styling
+├── LICENSE
 └── README.md
 ```
 
-## Analysis Pipeline
+### Analysis phases
 
-| Phase | MATLAB script | Purpose |
+| Phase | Function | Purpose |
 |---:|---|---|
-| 01 | `import_fred_data_01.m` | Automated FRED data acquisition |
-| 02 | `clean_transform_data_02.m` | Cleaning, quarterly harmonization and transformations |
-| 03 | `exploratory_analysis_03.m` | Descriptive statistics and macroeconomic visualizations |
-| 04 | `regression_model_04.m` | Baseline OLS model |
-| 05 | `diagnostics_05.m` | Regression diagnostics |
-| 06 | `lag_model_comparison_06.m` | Common-lag model comparison |
-| 07 | `dynamic_distributed_lag_07.m` | Dynamic distributed-lag regression |
-| 08 | `out_of_sample_forecast_08.m` | Genuine out-of-sample forecast design |
-| 09 | `forecast_robustness_09.m` | Pre-COVID / COVID / post-COVID robustness |
-| 10 | `structural_break_analysis_10.m` | 2020 structural-break analysis |
-| 11 | `expanding_window_forecast_11.m` | Adaptive expanding-window forecasting |
-| 12 | `final_research_dashboard_12.m` | Executive dashboard and final KPI summary |
+| 01 | `import_fred_data_01` | Load committed FRED snapshots or refresh them explicitly |
+| 02 | `clean_transform_data_02` | Validate, harmonize, aggregate and transform the data |
+| 03 | `exploratory_analysis_03` | Descriptive statistics and exploratory figures |
+| 04 | `regression_model_04` | Baseline contemporaneous OLS model |
+| 05 | `diagnostics_05` | Residual, normality, ARCH and multicollinearity diagnostics |
+| 06 | `lag_model_comparison_06` | Varying-sample common-lag comparison from zero to four quarters |
+| 07 | `dynamic_distributed_lag_07` | Explanatory 17-column dynamic distributed-lag model |
+| 08 | `out_of_sample_forecast_08` | Fixed-coefficient, forecast-feasible post-2015 evaluation |
+| 09 | `forecast_robustness_09` | Pre-COVID, COVID, post-COVID and full-sample metrics |
+| 10 | `structural_break_analysis_10` | Fixed 2020 Q1 Chow-style structural-break calculation |
+| 11 | `expanding_window_forecast_11` | Strictly recursive estimation and persistence comparison |
+| 12 | `final_research_dashboard_12` | KPI table, executive summary and final dashboard |
 
-## Reproducing the Project
+## One-command reproduction
 
-1. Clone the repository.
-2. Open MATLAB and set the repository root as the **Current Folder**.
-3. Add the `scripts` directory to the MATLAB path if required:
+### Requirements
+
+- **MATLAB R2026a** is the tested release and recommended reproducibility target.
+- The repository root must be on the MATLAB path so MATLAB can locate `run_all.m`; the current folder itself can be anywhere.
+- Compatibility with earlier MATLAB releases has not been established. The code relies on modern tables/timetables, string and name-value syntax, `arguments` blocks, tiled layouts, and `exportgraphics`.
+
+With the repository root on the MATLAB path, run:
 
 ```matlab
-addpath("scripts")
+summary = run_all;
 ```
 
-4. Run the scripts sequentially from Phase 01 through Phase 12.
-5. Generated data, model results, and figures are written automatically to their respective folders.
+`run_all.m` locates the repository from its own file location, temporarily adds only `src` and `scripts`, restores the incoming MATLAB path through cleanup, creates configured output directories, runs Phases 01–12 in order, prints phase status and elapsed time, and returns a structured execution summary.
 
-The first phase downloads the source series from FRED, making the data pipeline reproducible without manually copying observations into MATLAB.
+From an arbitrary shell working directory, the equivalent single command is:
 
-## Tools & Skills Demonstrated
+```powershell
+matlab -batch "addpath('C:/path/to/Macroeconomics_Econometrics_MATLAB'); summary = run_all;"
+```
 
-`MATLAB` · `Econometrics` · `Time-Series Analysis` · `OLS Regression` · `Distributed Lags` · `Forecast Validation` · `Structural Breaks` · `Expanding-Window Backtesting` · `Data Visualization` · `FRED` · `Git` · `GitHub`
+### Configured and fast execution
 
-## Interpretation & Limitations
+```matlab
+summary = run_all( ...
+    OutputRoot="C:/path/to/output", ...
+    RefreshData=false, ...
+    GenerateFigures=false, ...
+    StopOnError=true);
+```
 
-This project is an empirical portfolio study rather than a causal macroeconomic model. Coefficients should therefore be interpreted primarily as conditional associations within each specification.
+| Option | Default | Behavior |
+|---|---:|---|
+| `RefreshData` | `false` | Uses the committed raw FRED snapshots. This is the stable, parity-tested default. |
+| `GenerateFigures` | `true` | Generates all PNG/PDF artifacts. Set to `false` to retain analytical outputs while skipping plotting and export. |
+| `OutputRoot` | repository root | Redirects generated `data`, `results`, and `figures` directories to an isolated location. Source snapshots remain read-only when `RefreshData=false`. |
+| `StopOnError` | `true` | Stops immediately and raises a phase-specific error. When false, the execution summary records the failure and the pipeline attempts subsequent phases. |
 
-Important limitations include:
+In the tested Windows/MATLAB R2026a environment, the complete run with figures took approximately **459 seconds**, while `GenerateFigures=false` took approximately **6.8 seconds**. These are environment-specific reference timings, not performance guarantees.
 
-- linear functional forms may miss nonlinear macroeconomic relationships;
-- structural shocks can make historically estimated coefficients unstable;
-- the post-2020 subsample is relatively small for a high-dimensional lag model;
-- contemporaneous explanatory models are distinct from information-feasible forecasting models;
-- strong in-sample R² should not be interpreted as evidence of strong out-of-sample forecasting ability;
-- the Chow-style breakpoint result is conditional on the specified 2020 break date.
+## Testing
 
-These limitations are intentionally retained in the analysis rather than hidden, because the project focuses on **model validation and economic interpretation**, not simply maximizing fit.
+Run the complete test suite from the repository root with:
 
-## Selected Outputs
+```matlab
+addpath("tests");
+results = run_tests;
+```
 
-Additional outputs available in the repository include:
+From another working directory, add the absolute `tests` path instead. The current verified status is:
 
-- correlation heatmap;
-- OLS residual diagnostics;
-- observed-vs-fitted analysis;
-- lag coefficient paths;
-- inflation, unemployment, and interest-rate lag effects;
-- forecast-error time series;
-- regime-specific RMSE and MAE comparisons;
-- structural coefficient changes;
-- adaptive coefficient evolution;
-- cumulative forecast-error comparison;
-- machine-readable CSV result tables.
+- **97 passed**
+- **0 failed**
+- **0 incomplete**
+
+The suite covers project-root detection, configuration and safe output creation; raw and quarterly validation; lag alignment; no-leakage provenance; OLS and forecast metrics; independently callable phases; committed-output parity; figure-free execution; MATLAB-path restoration; and complete end-to-end reproduction in temporary output roots.
+
+## Toolboxes and environment-dependent diagnostics
+
+The core estimators are implemented in project code. The unchanged full pipeline requires **MATLAB** and **Statistics and Machine Learning Toolbox** because `corr` is used directly; in R2026a that toolbox also supplies `jbtest`, `qqplot`, and `fcdf`. The code retains its existing fallback or `NaN` behavior if those three diagnostic functions are individually unavailable.
+
+**Econometrics Toolbox is optional.** It supplies `archtest`; when that function is unavailable, the ARCH result is recorded as `NaN` with an explicit warning.
+
+- Required: MATLAB R2026a (tested target) and Statistics and Machine Learning Toolbox.
+- Optional: Econometrics Toolbox for the ARCH test.
+- No HAC/Newey–West estimator, alternate p-value method, or toolbox-specific replacement estimator is introduced.
+
+The committed `Diagnostic_Summary.csv` was produced in an environment where `archtest` was unavailable, so its ARCH fields are `NaN`. In the tested R2026a environment, `archtest` is available and returns rejection with a p-value of approximately **3.66 × 10⁻¹⁵**. This expected environment-dependent diagnostic does not affect the regression coefficients, forecast results, headline KPIs, or committed artifacts. MATLAB may also warn that the Jarque–Bera p-value is below its smallest tabulated value and return `0.001`.
+
+## Data sources
+
+The project uses public U.S. macroeconomic series from [Federal Reserve Economic Data](https://fred.stlouisfed.org/):
+
+| Series | FRED ID | Project role |
+|---|---|---|
+| Real Gross Domestic Product | `GDPC1` | Real GDP level and quarterly growth |
+| Unemployment Rate | `UNRATE` | Labor-market condition |
+| Consumer Price Index for All Urban Consumers | `CPIAUCSL` | Inflation calculation |
+| Effective Federal Funds Rate | `FEDFUNDS` | Monetary-policy condition |
+
+Monthly series are converted to quarterly frequency and synchronized with quarterly real GDP. GDP growth and inflation use the project’s existing annualized quarterly log-difference transformations.
+
+`RefreshData=false` reads the four committed raw CSV snapshots, making results stable even if FRED later revises historical observations. `RefreshData=true` explicitly downloads current series from FRED and can therefore produce different samples or results; refreshed output should be directed to a separate `OutputRoot` when preservation of committed artifacts matters.
+
+## Pipeline outputs
+
+A complete figure-producing run creates:
+
+- **5 data files** — four raw FRED tables and one processed quarterly dataset;
+- **26 result/text files** — descriptive statistics, model tables, diagnostics, forecasts, KPI tables, and the executive summary;
+- **40 PNG/PDF artifacts** — 39 numbered PNG outputs plus the vector dashboard PDF;
+- **71 total outputs**.
+
+The default filenames and schemas are parity-tested. With `GenerateFigures=false`, the same 5 data files and 26 analytical result/text files are generated, while the configured figures directory remains empty.
+
+## Reproducibility design
+
+- The entry point derives the project root from `run_all.m`, not `pwd`.
+- Every phase accepts an optional shared configuration and remains independently callable.
+- Input paths and output roots are explicit; isolated runs do not write into the caller’s working directory.
+- Required directories are validated and created safely before execution.
+- Raw and processed tables are checked for required variables, numeric observations, valid and unique dates, quarterly continuity, finite values, and positive GDP/CPI levels.
+- Shared helpers centralize lag construction, OLS conventions, and forecast metrics without changing the original methodology.
+- Synthetic alignment tests and committed-output comparisons protect samples, ordering, schemas, filenames, statistics, forecasts, and headline conclusions.
+
+## Forecast no-leakage design
+
+The explanatory Phase 7 model intentionally includes contemporaneous inflation, unemployment, and interest rates and is assessed as an in-sample relationship model.
+
+Forecasting in Phases 8, 10, and 11 uses a separate design matrix containing GDP growth lag 1 and lags 1–4 of inflation, unemployment, and interest rates. No predictor uses information from quarter `t` or later. Phase 8 estimates fixed coefficients using observations before 2016; Phase 11 re-estimates strictly on rows preceding each forecast quarter. Both are compared against naive persistence, defined as the previous quarter’s GDP growth.
+
+Tests verify predictor source-row indices, training boundaries, recursive training sizes, and the absence of contemporaneous forecast columns.
+
+## Limitations
+
+This is an empirical portfolio study, not a causal structural macroeconomic model. Important limitations include:
+
+- linear specifications may miss nonlinearities, interactions, and asymmetric responses;
+- classical covariance and normal-approximation p-values are retained rather than robust/HAC inference;
+- the Chow-style result is conditional on a fixed 2020 Q1 breakpoint;
+- the post-break sample is small relative to the dynamic model dimension;
+- FRED observations are revised and the project does not use real-time vintage data;
+- the models do not incorporate survey expectations, financial-market variables, mixed frequencies, or publication lags;
+- strong in-sample fit does not imply forecast accuracy, as the persistence comparison demonstrates.
+
+## Future methodology extensions
+
+Potential extensions—none of which are claimed as implemented—include HAC/Newey–West inference, multiple-break or Bai–Perron procedures, real-time FRED vintages, rolling-window alternatives, regularization, richer forecast benchmarks, nonlinear models, and formal forecast-comparison tests. These should be introduced as new methodology rather than folded silently into the parity-preserving pipeline.
+
+## Portfolio site
+
+The repository includes a static portfolio presentation in [`index.html`](index.html) with styling in [`styles.css`](styles.css). It is structured for GitHub Pages or another static host. No public deployment URL is asserted here because the repository does not contain one.
 
 ## Author
 
-**Sayak Pranab Ghosh**
-
+**Sayak Pranab Ghosh**<br>
 MBA, Department of Management Studies, IIT Roorkee
 
----
+## License
 
-### Portfolio Summary
-
-Built an end-to-end MATLAB macroeconometrics pipeline using more than six decades of U.S. macroeconomic history, integrating automated FRED ingestion, data-frequency harmonization, OLS diagnostics, dynamic distributed-lag modelling, structural-break analysis, benchmarked out-of-sample forecasting, and expanding-window adaptation. The project found strong regime dependence: the model reduced pre-COVID MAE by approximately **14.8%** versus persistence, while the 2020 break materially weakened the stability of historical relationships.
+See [`LICENSE`](LICENSE).

@@ -1,5 +1,13 @@
+function output = dynamic_distributed_lag_07(cfg)
+%DYNAMIC_DISTRIBUTED_LAG_07 Phase 7 - Dynamic distributed-lag model.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -10,146 +18,50 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 7: Dynamic Distributed Lag Regression");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% Load cleaned quarterly dataset
 
 DATA = readtimetable( ...
-    fullfile("data","Macroeconomic_Data_Quarterly.csv"));
+    resolveDataInput(cfg,"Macroeconomic_Data_Quarterly.csv"));
+
+DATA = macro.validateQuarterlyData(DATA);
 
 disp("Dataset loaded successfully.");
 
-%% Maximum lag
+%% Build and estimate the exact Phase 7 specification
 
-maxLag = 4;
+design = macro.buildDynamicDesign(DATA);
+MODEL = macro.estimateOLS(design.X,design.Y, ...
+    CovarianceSolver="pseudoinverse");
 
-%% Create common estimation sample
-
-Y_full = DATA.GDPGrowth;
-INF_full = DATA.Inflation;
-UNEMP_full = DATA.Unemployment;
-RATE_full = DATA.InterestRate;
-
-nTotal = height(DATA);
-
-%% Current GDP growth begins after four lagged quarters
-
-Y = Y_full(maxLag+1:end);
-
-dates = DATA.observation_date(maxLag+1:end);
-
-%% Lagged GDP growth
-
-GDP_L1 = Y_full(maxLag:end-1);
-
-%% Create inflation lags
-
-INF_0 = INF_full(maxLag+1:end);
-INF_1 = INF_full(maxLag:end-1);
-INF_2 = INF_full(maxLag-1:end-2);
-INF_3 = INF_full(maxLag-2:end-3);
-INF_4 = INF_full(maxLag-3:end-4);
-
-%% Create unemployment lags
-
-UNEMP_0 = UNEMP_full(maxLag+1:end);
-UNEMP_1 = UNEMP_full(maxLag:end-1);
-UNEMP_2 = UNEMP_full(maxLag-1:end-2);
-UNEMP_3 = UNEMP_full(maxLag-2:end-3);
-UNEMP_4 = UNEMP_full(maxLag-3:end-4);
-
-%% Create interest-rate lags
-
-RATE_0 = RATE_full(maxLag+1:end);
-RATE_1 = RATE_full(maxLag:end-1);
-RATE_2 = RATE_full(maxLag-1:end-2);
-RATE_3 = RATE_full(maxLag-2:end-3);
-RATE_4 = RATE_full(maxLag-3:end-4);
-
-%% Build design matrix
-
-X = [ ...
-    ones(length(Y),1), ...
-    GDP_L1, ...
-    INF_0, INF_1, INF_2, INF_3, INF_4, ...
-    UNEMP_0, UNEMP_1, UNEMP_2, UNEMP_3, UNEMP_4, ...
-    RATE_0, RATE_1, RATE_2, RATE_3, RATE_4];
-
-%% Estimate model
-
-beta = X \ Y;
-
-Y_hat = X * beta;
-
-residuals = Y - Y_hat;
-
-%% Model statistics
-
-n = length(Y);
-k = size(X,2);
-
-SSE = sum(residuals.^2);
-SST = sum((Y - mean(Y)).^2);
-SSR = SST - SSE;
-
-R2 = 1 - SSE/SST;
-
-AdjustedR2 = ...
-    1 - ((SSE/(n-k)) / ...
-    (SST/(n-1)));
-
-RMSE = sqrt(mean(residuals.^2));
-
-FStatistic = ...
-    (SSR/(k-1)) / ...
-    (SSE/(n-k));
-
-%% Information criteria
-
-logLik = ...
-    -n/2 * ...
-    (log(2*pi) + 1 + log(SSE/n));
-
-AIC = 2*k - 2*logLik;
-
-BIC = log(n)*k - 2*logLik;
-
-%% Standard errors
-
-sigma2 = SSE/(n-k);
-
-VarBeta = ...
-    sigma2 * pinv(X' * X);
-
-SE = sqrt(diag(VarBeta));
-
-TStatistic = beta ./ SE;
-
-ApproxPValue = ...
-    erfc(abs(TStatistic)/sqrt(2));
+Y = design.Y;
+dates = design.Dates;
+X = design.X;
+beta = MODEL.Coefficients;
+Y_hat = MODEL.Fitted;
+residuals = MODEL.Residuals;
+n = MODEL.Observations;
+k = MODEL.Parameters;
+SSE = MODEL.SSE;
+SST = MODEL.SST;
+SSR = MODEL.SSR;
+R2 = MODEL.RSquared;
+AdjustedR2 = MODEL.AdjustedRSquared;
+RMSE = MODEL.RMSE;
+FStatistic = MODEL.FStatistic;
+logLik = MODEL.LogLikelihood;
+AIC = MODEL.AIC;
+BIC = MODEL.BIC;
+sigma2 = MODEL.ResidualVariance;
+VarBeta = MODEL.Covariance;
+SE = MODEL.StandardErrors;
+TStatistic = MODEL.TStatistics;
+ApproxPValue = MODEL.ApproxPValues;
 
 %% Variable names
 
-Variable = [ ...
-    "Intercept"
-    "GDPGrowth_L1"
-
-    "Inflation_0"
-    "Inflation_L1"
-    "Inflation_L2"
-    "Inflation_L3"
-    "Inflation_L4"
-
-    "Unemployment_0"
-    "Unemployment_L1"
-    "Unemployment_L2"
-    "Unemployment_L3"
-    "Unemployment_L4"
-
-    "InterestRate_0"
-    "InterestRate_L1"
-    "InterestRate_L2"
-    "InterestRate_L3"
-    "InterestRate_L4"
-    ];
+Variable = design.VariableNames';
 
 %% Coefficient table
 
@@ -188,7 +100,7 @@ fprintf("BIC: %.2f\n",BIC);
 writetable( ...
     DYNAMIC_RESULTS, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Dynamic_Distributed_Lag_Results.csv"));
 
 %% Model summary
@@ -213,7 +125,7 @@ MODEL_SUMMARY = table( ...
 writetable( ...
     MODEL_SUMMARY, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Dynamic_Model_Summary.csv"));
 
 %% Prediction output
@@ -232,10 +144,12 @@ PREDICTIONS = table( ...
 writetable( ...
     PREDICTIONS, ...
     fullfile( ...
-        "results", ...
+        cfg.ResultsDir, ...
         "Dynamic_Model_Predictions.csv"));
 
 %% Figure 19 - Actual vs predicted
+
+if cfg.GenerateFigures
 
 fig1 = figure( ...
     'Position',[100 100 1200 650]);
@@ -276,7 +190,7 @@ hold off;
 exportgraphics( ...
     fig1, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "19_Dynamic_Model_Actual_vs_Predicted.png"), ...
     'Resolution',300);
 
@@ -305,7 +219,7 @@ ylabel("Estimated Coefficient");
 exportgraphics( ...
     fig2, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "20_Inflation_Lag_Effects.png"), ...
     'Resolution',300);
 
@@ -334,7 +248,7 @@ ylabel("Estimated Coefficient");
 exportgraphics( ...
     fig3, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "21_Unemployment_Lag_Effects.png"), ...
     'Resolution',300);
 
@@ -363,9 +277,11 @@ ylabel("Estimated Coefficient");
 exportgraphics( ...
     fig4, ...
     fullfile( ...
-        "figures", ...
+        cfg.FiguresDir, ...
         "22_Interest_Rate_Lag_Effects.png"), ...
     'Resolution',300);
+
+end
 
 %% Finish
 
@@ -376,3 +292,42 @@ disp("==============================================");
 
 disp("Dynamic regression completed successfully.");
 disp("Outputs saved to results and figures folders.");
+
+output = struct("Design",design, ...
+    "Model",MODEL, ...
+    "DynamicResults",DYNAMIC_RESULTS, ...
+    "ModelSummary",MODEL_SUMMARY, ...
+    "Predictions",PREDICTIONS, ...
+    "FigureFiles",[ ...
+        "19_Dynamic_Model_Actual_vs_Predicted.png"; ...
+        "20_Inflation_Lag_Effects.png"; ...
+        "21_Unemployment_Lag_Effects.png"; ...
+        "22_Interest_Rate_Lag_Effects.png"]);
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveDataInput(cfg,fileName)
+inputFile = fullfile(cfg.DataDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.SourceDataDir,fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase07:MissingInput", ...
+            "Required processed-data file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end

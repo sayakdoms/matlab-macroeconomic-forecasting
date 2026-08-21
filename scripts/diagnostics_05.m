@@ -1,5 +1,13 @@
+function output = diagnostics_05(cfg)
+%DIAGNOSTICS_05 Phase 5 - Baseline OLS diagnostic analysis.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -10,10 +18,14 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 5: OLS Diagnostic Analysis");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% Load cleaned dataset
 
 DATA = readtimetable( ...
-    fullfile("data","Macroeconomic_Data_Quarterly.csv"));
+    resolveDataInput(cfg,"Macroeconomic_Data_Quarterly.csv"));
+
+DATA = macro.validateQuarterlyData(DATA);
 
 %% Re-estimate baseline OLS model
 
@@ -31,11 +43,11 @@ X = [ ...
     Unemployment, ...
     InterestRate];
 
-beta = X \ Y;
+MODEL = macro.estimateOLS(X,Y,CovarianceSolver="inverse");
 
-Y_hat = X * beta;
-
-residuals = Y - Y_hat;
+beta = MODEL.Coefficients;
+Y_hat = MODEL.Fitted;
+residuals = MODEL.Residuals;
 
 %% =========================================================
 % 1. DURBIN-WATSON STATISTIC
@@ -72,17 +84,10 @@ for j = 1:3
         ones(n,1), ...
         Predictors(:,otherIndex)];
 
-    bj = Xj \ yj;
+    auxiliaryModel = macro.estimateOLS(Xj,yj, ...
+        CovarianceSolver="inverse");
 
-    fitted_j = Xj * bj;
-
-    residual_j = yj - fitted_j;
-
-    SSE_j = sum(residual_j.^2);
-
-    SST_j = sum((yj - mean(yj)).^2);
-
-    R2_j = 1 - SSE_j/SST_j;
+    R2_j = auxiliaryModel.RSquared;
 
     VIF(j) = 1 / (1 - R2_j);
 
@@ -103,7 +108,7 @@ disp(VIF_TABLE);
 
 writetable( ...
     VIF_TABLE, ...
-    fullfile("results","VIF_Results.csv"));
+    fullfile(cfg.ResultsDir,"VIF_Results.csv"));
 
 %% =========================================================
 % 3. NORMALITY TEST
@@ -115,6 +120,8 @@ if exist('jbtest','file') == 2
 
 else
 
+    warning("macro:diagnostics:JBTestUnavailable", ...
+        "jbtest is unavailable; Jarque-Bera outputs are set to NaN.");
     JBReject = NaN;
     JBpValue = NaN;
 
@@ -134,6 +141,8 @@ if exist('archtest','file') == 2
 
 else
 
+    warning("macro:diagnostics:ARCHTestUnavailable", ...
+        "archtest is unavailable; ARCH outputs are set to NaN.");
     ARCHReject = NaN;
     ARCHpValue = NaN;
 
@@ -168,6 +177,11 @@ end
 
 %% Figure 11 - Residual Autocorrelation
 
+residualStd = std(residuals);
+standardizedResiduals = residuals / residualStd;
+
+if cfg.GenerateFigures
+
 fig1 = figure;
 
 stem(0:maxLag,acfValues,'filled');
@@ -192,7 +206,7 @@ hold off;
 
 exportgraphics( ...
     fig1, ...
-    fullfile("figures","11_Residual_ACF.png"), ...
+    fullfile(cfg.FiguresDir,"11_Residual_ACF.png"), ...
     'Resolution',300);
 
 %% =========================================================
@@ -222,7 +236,7 @@ hold off;
 
 exportgraphics( ...
     fig2, ...
-    fullfile("figures","12_Residual_vs_Fitted.png"), ...
+    fullfile(cfg.FiguresDir,"12_Residual_vs_Fitted.png"), ...
     'Resolution',300);
 
 %% =========================================================
@@ -239,6 +253,8 @@ if exist('qqplot','file') == 2
 
 else
 
+    warning("macro:diagnostics:QQPlotUnavailable", ...
+        "qqplot is unavailable; using the existing manual Q-Q fallback.");
     sortedResiduals = sort(residuals);
 
     probabilities = ...
@@ -283,17 +299,12 @@ end
 
 exportgraphics( ...
     fig3, ...
-    fullfile("figures","13_Residual_QQ_Plot.png"), ...
+    fullfile(cfg.FiguresDir,"13_Residual_QQ_Plot.png"), ...
     'Resolution',300);
 
 %% =========================================================
 % 8. STANDARDIZED RESIDUALS
 % ==========================================================
-
-residualStd = std(residuals);
-
-standardizedResiduals = ...
-    residuals / residualStd;
 
 fig4 = figure;
 
@@ -321,8 +332,10 @@ hold off;
 
 exportgraphics( ...
     fig4, ...
-    fullfile("figures","14_Standardized_Residuals.png"), ...
+    fullfile(cfg.FiguresDir,"14_Standardized_Residuals.png"), ...
     'Resolution',300);
+
+end
 
 %% =========================================================
 % 9. DIAGNOSTICS SUMMARY
@@ -354,7 +367,7 @@ disp(DIAGNOSTIC_SUMMARY);
 
 writetable( ...
     DIAGNOSTIC_SUMMARY, ...
-    fullfile("results","Diagnostic_Summary.csv"));
+    fullfile(cfg.ResultsDir,"Diagnostic_Summary.csv"));
 
 %% Finish
 
@@ -374,3 +387,42 @@ disp("figures/11_Residual_ACF.png");
 disp("figures/12_Residual_vs_Fitted.png");
 disp("figures/13_Residual_QQ_Plot.png");
 disp("figures/14_Standardized_Residuals.png");
+
+output = struct("Model",MODEL, ...
+    "VIFResults",VIF_TABLE, ...
+    "DiagnosticSummary",DIAGNOSTIC_SUMMARY, ...
+    "ACFValues",acfValues, ...
+    "StandardizedResiduals",standardizedResiduals, ...
+    "FigureFiles",[ ...
+        "11_Residual_ACF.png"; ...
+        "12_Residual_vs_Fitted.png"; ...
+        "13_Residual_QQ_Plot.png"; ...
+        "14_Standardized_Residuals.png"]);
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveDataInput(cfg,fileName)
+inputFile = fullfile(cfg.DataDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.SourceDataDir,fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase05:MissingInput", ...
+            "Required processed-data file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end

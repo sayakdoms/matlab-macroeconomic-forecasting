@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata in this file."
+type: software
+title: "U.S. Macroeconomic Dynamics & GDP Growth Forecasting in MATLAB"
+authors:
+  - family-names: "Ghosh"
+    given-names: "Sayak Pranab"
+abstract: >-
+  A reproducible MATLAB project for studying U.S. macroeconomic dynamics
+  and GDP growth forecasting with FRED data, classical regression,
+  distributed lags, structural-break analysis, out-of-sample evaluation,
+  and expanding-window backtesting.
+repository-code: "https://github.com/sayakdoms/matlab-macroeconomic-forecasting"
+license: MIT
+keywords:
+  - MATLAB
+  - macroeconometrics
+  - forecasting
+  - FRED
+  - time series
+  - expanding-window backtesting
+  - structural break
+  - reproducible research

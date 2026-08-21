@@ -1,5 +1,13 @@
+function output = lag_model_comparison_06(cfg)
+%LAG_MODEL_COMPARISON_06 Phase 6 - Common-lag model comparison.
+
+if nargin < 1
+    cfg = [];
+end
+[cfg,pathCleanup] = initializePhaseConfiguration( ...
+    cfg,mfilename("fullpath")); %#ok<ASGLU>
+
 clc;
-clear;
 close all;
 
 %% MATLAB MACROECONOMETRICS PROJECT
@@ -10,10 +18,14 @@ disp(" MATLAB MACROECONOMETRICS PROJECT");
 disp(" Phase 6: Lag Model Comparison");
 disp("==============================================");
 
+macro.ensureOutputDirectories(cfg);
+
 %% Load cleaned quarterly dataset
 
 DATA = readtimetable( ...
-    fullfile("data","Macroeconomic_Data_Quarterly.csv"));
+    resolveDataInput(cfg,"Macroeconomic_Data_Quarterly.csv"));
+
+DATA = macro.validateQuarterlyData(DATA);
 
 disp("Clean quarterly dataset loaded successfully.");
 
@@ -45,61 +57,20 @@ for L = 0:maxLag
     modelIndex = L + 1;
     modelNames(modelIndex) = "Lag " + string(L);
 
-    % Dependent variable: current GDP growth
-    Y = DATA.GDPGrowth(1+L:end);
-
-    % Lagged predictors
-    InflationLag = DATA.Inflation(1:end-L);
-    UnemploymentLag = DATA.Unemployment(1:end-L);
-    InterestRateLag = DATA.InterestRate(1:end-L);
-
-    % Design matrix
-    X = [ ...
-        ones(length(Y),1), ...
-        InflationLag, ...
-        UnemploymentLag, ...
-        InterestRateLag];
-
-    % OLS estimation
-    beta = X \ Y;
-    Y_hat = X * beta;
-    residuals = Y - Y_hat;
-
-    % Dimensions
-    n = length(Y);
-    k = size(X,2);
-
-    % Sums of squares
-    SSE = sum(residuals.^2);
-    SST = sum((Y - mean(Y)).^2);
-    SSR = SST - SSE;
-
-    % Goodness of fit
-    R2 = 1 - SSE / SST;
-    AdjR2 = 1 - ((SSE/(n-k)) / (SST/(n-1)));
-    rmse = sqrt(mean(residuals.^2));
-
-    % Residual variance
-    sigma2 = SSE / (n-k);
-
-    % Log-likelihood under normality assumption
-    logLik = -n/2 * (log(2*pi) + 1 + log(SSE/n));
-
-    % Information criteria
-    aic = 2*k - 2*logLik;
-    bic = log(n)*k - 2*logLik;
-
-    % F-statistic
-    fStat = (SSR / (k-1)) / (SSE / (n-k));
+    % Preserve the existing varying sample for each common lag
+    design = macro.buildCommonLagDesign(DATA,L);
+    model = macro.estimateOLS(design.X,design.Y, ...
+        CovarianceSolver="inverse");
+    beta = model.Coefficients;
 
     % Store metrics
-    Observations(modelIndex) = n;
-    RSquared(modelIndex) = R2;
-    AdjustedRSquared(modelIndex) = AdjR2;
-    RMSE(modelIndex) = rmse;
-    AIC(modelIndex) = aic;
-    BIC(modelIndex) = bic;
-    FStatistic(modelIndex) = fStat;
+    Observations(modelIndex) = model.Observations;
+    RSquared(modelIndex) = model.RSquared;
+    AdjustedRSquared(modelIndex) = model.AdjustedRSquared;
+    RMSE(modelIndex) = model.RMSE;
+    AIC(modelIndex) = model.AIC;
+    BIC(modelIndex) = model.BIC;
+    FStatistic(modelIndex) = model.FStatistic;
 
     % Store coefficients
     InterceptCoef(modelIndex) = beta(1);
@@ -140,7 +111,7 @@ disp(MODEL_COMPARISON);
 
 writetable( ...
     MODEL_COMPARISON, ...
-    fullfile("results","Lag_Model_Comparison.csv"));
+    fullfile(cfg.ResultsDir,"Lag_Model_Comparison.csv"));
 
 %% Coefficient path table
 
@@ -165,7 +136,7 @@ disp(COEFFICIENT_PATHS);
 
 writetable( ...
     COEFFICIENT_PATHS, ...
-    fullfile("results","Lag_Model_Coefficients.csv"));
+    fullfile(cfg.ResultsDir,"Lag_Model_Coefficients.csv"));
 
 %% Identify best model
 % Criterion: highest Adjusted R-Squared
@@ -178,24 +149,14 @@ fprintf("Best Adjusted R-Squared: %.4f\n", bestAdjR2);
 
 %% Re-estimate best lag model for detailed output
 
-L = bestLag;
+bestDesign = macro.buildCommonLagDesign(DATA,bestLag);
+bestModel = macro.estimateOLS(bestDesign.X,bestDesign.Y, ...
+    CovarianceSolver="inverse");
 
-Best_Y = DATA.GDPGrowth(1+L:end);
-Best_Dates = DATA.observation_date(1+L:end);
-
-Best_InflationLag = DATA.Inflation(1:end-L);
-Best_UnemploymentLag = DATA.Unemployment(1:end-L);
-Best_InterestRateLag = DATA.InterestRate(1:end-L);
-
-Best_X = [ ...
-    ones(length(Best_Y),1), ...
-    Best_InflationLag, ...
-    Best_UnemploymentLag, ...
-    Best_InterestRateLag];
-
-Best_beta = Best_X \ Best_Y;
-Best_Y_hat = Best_X * Best_beta;
-Best_residuals = Best_Y - Best_Y_hat;
+Best_Y = bestDesign.Y;
+Best_Dates = bestDesign.Dates;
+Best_Y_hat = bestModel.Fitted;
+Best_residuals = bestModel.Residuals;
 
 BEST_MODEL_OUTPUT = table( ...
     Best_Dates, ...
@@ -210,7 +171,7 @@ BEST_MODEL_OUTPUT = table( ...
 
 writetable( ...
     BEST_MODEL_OUTPUT, ...
-    fullfile("results","Best_Lag_Model_Output.csv"));
+    fullfile(cfg.ResultsDir,"Best_Lag_Model_Output.csv"));
 
 %% Save best model summary
 
@@ -235,9 +196,11 @@ BEST_MODEL_SUMMARY = table( ...
 
 writetable( ...
     BEST_MODEL_SUMMARY, ...
-    fullfile("results","Best_Lag_Model_Summary.csv"));
+    fullfile(cfg.ResultsDir,"Best_Lag_Model_Summary.csv"));
 
 %% Figure 15 - R-Squared comparison across lag models
+
+if cfg.GenerateFigures
 
 fig1 = figure( ...
     'Position',[100 100 1100 600]);
@@ -259,7 +222,7 @@ hold off;
 
 exportgraphics( ...
     fig1, ...
-    fullfile("figures","15_Lag_Model_R2_Comparison.png"), ...
+    fullfile(cfg.FiguresDir,"15_Lag_Model_R2_Comparison.png"), ...
     'Resolution',300);
 
 %% Figure 16 - RMSE comparison across lag models
@@ -279,7 +242,7 @@ ylabel("RMSE");
 
 exportgraphics( ...
     fig2, ...
-    fullfile("figures","16_Lag_Model_RMSE_Comparison.png"), ...
+    fullfile(cfg.FiguresDir,"16_Lag_Model_RMSE_Comparison.png"), ...
     'Resolution',300);
 
 %% Figure 17 - Coefficient paths across lag models
@@ -307,7 +270,7 @@ hold off;
 
 exportgraphics( ...
     fig3, ...
-    fullfile("figures","17_Coefficient_Paths_Across_Lags.png"), ...
+    fullfile(cfg.FiguresDir,"17_Coefficient_Paths_Across_Lags.png"), ...
     'Resolution',300);
 
 %% Figure 18 - Actual vs Predicted for best lag model
@@ -338,8 +301,10 @@ hold off;
 
 exportgraphics( ...
     fig4, ...
-    fullfile("figures","18_Best_Lag_Model_Actual_vs_Predicted.png"), ...
+    fullfile(cfg.FiguresDir,"18_Best_Lag_Model_Actual_vs_Predicted.png"), ...
     'Resolution',300);
+
+end
 
 %% Finish
 
@@ -361,3 +326,44 @@ disp("figures/15_Lag_Model_R2_Comparison.png");
 disp("figures/16_Lag_Model_RMSE_Comparison.png");
 disp("figures/17_Coefficient_Paths_Across_Lags.png");
 disp("figures/18_Best_Lag_Model_Actual_vs_Predicted.png");
+
+output = struct("ModelComparison",MODEL_COMPARISON, ...
+    "CoefficientPaths",COEFFICIENT_PATHS, ...
+    "BestLag",bestLag, ...
+    "BestDesign",bestDesign, ...
+    "BestModel",bestModel, ...
+    "BestModelOutput",BEST_MODEL_OUTPUT, ...
+    "BestModelSummary",BEST_MODEL_SUMMARY, ...
+    "FigureFiles",[ ...
+        "15_Lag_Model_R2_Comparison.png"; ...
+        "16_Lag_Model_RMSE_Comparison.png"; ...
+        "17_Coefficient_Paths_Across_Lags.png"; ...
+        "18_Best_Lag_Model_Actual_vs_Predicted.png"]);
+end
+
+function [cfg,pathCleanup] = initializePhaseConfiguration(cfg,scriptPath)
+projectRoot = string(fileparts(fileparts(scriptPath)));
+sourceDir = fullfile(projectRoot,"src");
+pathEntries = string(strsplit(path,pathsep));
+if ~any(pathEntries == sourceDir)
+    addpath(sourceDir);
+    pathCleanup = onCleanup(@() rmpath(sourceDir));
+else
+    pathCleanup = onCleanup(@() []);
+end
+if isempty(cfg)
+    cfg = macro.projectConfig(projectRoot);
+end
+end
+
+function inputFile = resolveDataInput(cfg,fileName)
+inputFile = fullfile(cfg.DataDir,fileName);
+if ~isfile(inputFile)
+    sourceFile = fullfile(cfg.SourceDataDir,fileName);
+    if ~isfile(sourceFile)
+        error("macro:phase06:MissingInput", ...
+            "Required processed-data file was not found: %s",fileName);
+    end
+    inputFile = sourceFile;
+end
+end
