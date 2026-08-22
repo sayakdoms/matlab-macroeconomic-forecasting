@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0",
+  "seriesID": "CPIAUCSL",
+  "retrievedAtUTC": "2026-08-22T01:25:20.811Z",
+  "realtimeStart": "1776-07-04",
+  "realtimeEnd": "9999-12-31",
+  "sourceEndpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "rowCount": 3102,
+  "missingObservationCount": 259,
+  "checksumAlgorithm": "SHA-256",
+  "checksumSHA256": "47a53134715adb574e3ee554d09ff37c6d4889c6417d78d2a82f28452b8acd66",
+  "dataFile": "CPIAUCSL_17760704_99991231.csv"
+}

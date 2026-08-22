@@ -1,0 +1,7 @@
+Test,Scope,Statistic,ReferenceThreshold,PointwisePValue,GlobalOrBootstrapPValue,RejectAt5Percent,SampleSize,BreakDate,UncertaintyStart,UncertaintyEnd,ExPostOnly,Caveat
+V1 fixed 2020 Q1 Chow baseline,V1 read-only baseline,12.4343769850432,NaN,0,NaN,1,262,01-Jan-2020,NaT,NaT,0,Committed V1 fixed-date Chow-style calculation
+V2 reproduced fixed 2020 Q1 Chow,Ex-post full-sample structural diagnostic,12.4343769850432,NaN,0,NaN,1,262,01-Jan-2020,NaT,NaT,1,Exact V1 reproduction; fixed date was not selected by V2
+Fixed 2020 Q1 excluding acute COVID quarters,Ex-post full-sample structural diagnostic,1.87143139413133,NaN,0.0303233854406582,NaN,1,260,01-Jan-2020,NaT,NaT,1,Sensitivity excludes predeclared 2020 Q2-Q3 collapse/rebound quarters
+Trimmed sup-Wald single-break search,Ex-post full-sample structural diagnostic,7.40459669657568,NaN,9.29922805426031e-13,0.004,1,262,01-Jul-2016,01-Jul-2014,01-Jul-2016,1,Circular moving-block residual-bootstrap p-value; break-date interval is conditional on a selected single-break model and is not post-selection exact.
+CUSUM,Ex-post full-sample structural diagnostic,1.10760342058986,1,NaN,NaN,1,262,NaT,NaT,NaT,1,Brown-Durbin-Evans recursive-residual boundary; parameter constancy null
+CUSUMSQ,Ex-post full-sample structural diagnostic,0.397523786963825,0.115643045155656,NaN,NaN,1,262,NaT,NaT,NaT,1,Conditional iid-Gaussian Monte Carlo band; especially outlier-sensitive

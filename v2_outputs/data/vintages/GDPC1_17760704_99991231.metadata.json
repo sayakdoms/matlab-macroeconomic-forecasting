@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0",
+  "seriesID": "GDPC1",
+  "retrievedAtUTC": "2026-08-22T01:23:29.451Z",
+  "realtimeStart": "1776-07-04",
+  "realtimeEnd": "9999-12-31",
+  "sourceEndpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "rowCount": 4163,
+  "missingObservationCount": 239,
+  "checksumAlgorithm": "SHA-256",
+  "checksumSHA256": "fa5f9bec9ee719f10a73d544b407cca0733e74bc8486f10255c6e138afdceade",
+  "dataFile": "GDPC1_17760704_99991231.csv"
+}

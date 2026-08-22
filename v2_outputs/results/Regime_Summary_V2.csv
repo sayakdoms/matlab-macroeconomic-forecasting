@@ -1,0 +1,9 @@
+Analysis,Regime,BreakDate,Observations,RSquared,AdjustedRSquared,RMSE,AcuteCOVIDQuartersExcluded,ExPostOnly,Interpretation
+V1 fixed baseline,Before break,01-Jan-2020,236,0.261548221767798,0.218305550069516,2.73822637069913,0,0,Preserved V1 baseline
+V1 fixed baseline,On/after break,01-Jan-2020,26,0.874908922888186,0.739393589350387,3.21923567736384,0,0,Preserved V1 baseline
+V2 fixed-date reproduction,Before break,01-Jan-2020,236,0.261548221767798,0.218305550069516,2.73822637069913,0,1,Ex-post reproduction; not a forecast input
+V2 fixed-date reproduction,On/after break,01-Jan-2020,26,0.874908922888186,0.739393589350387,3.21923567736384,0,1,Ex-post reproduction; not a forecast input
+V2 acute-COVID sensitivity,Before break,01-Jan-2020,236,0.261548221767798,0.218305550069516,2.73822637069913,1,1,Ex-post acute-shock sensitivity; not causal
+V2 acute-COVID sensitivity,On/after break,01-Jan-2020,24,0.904625434999286,0.780638500498358,0.791240214105239,1,1,Ex-post acute-shock sensitivity; not causal
+V2 selected single break,Before break,01-Jul-2016,222,0.26395217811346,0.217949189245551,2.80966255055416,0,1,Ex-post selected break; subject to post-selection uncertainty
+V2 selected single break,On/after break,01-Jul-2016,40,0.672092521833467,0.5081387827502,4.21794683830749,0,1,Ex-post selected break; subject to post-selection uncertainty

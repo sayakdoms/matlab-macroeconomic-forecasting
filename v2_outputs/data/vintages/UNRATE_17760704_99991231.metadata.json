@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0",
+  "seriesID": "UNRATE",
+  "retrievedAtUTC": "2026-08-22T01:25:48.867Z",
+  "realtimeStart": "1776-07-04",
+  "realtimeEnd": "9999-12-31",
+  "sourceEndpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "rowCount": 2196,
+  "missingObservationCount": 1,
+  "checksumAlgorithm": "SHA-256",
+  "checksumSHA256": "51d70b9aa2394b741feac554d5c30cd86fe196af9a8513f893f004edc133901f",
+  "dataFile": "UNRATE_17760704_99991231.csv"
+}

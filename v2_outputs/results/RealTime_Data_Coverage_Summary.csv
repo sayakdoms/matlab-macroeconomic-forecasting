@@ -1,0 +1,3 @@
+OriginRule,TotalOrigins,CompleteInformationSets,IncompleteInformationSets,CompletePercent,EarliestCompleteTargetQuarter,LatestCompleteTargetQuarter
+primary-early-quarter,106,102,4,96.2264150943396,2000-01-01,2025-07-01
+strict-quarter-start,106,0,106,0,NaT,NaT

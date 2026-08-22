@@ -1,0 +1,49 @@
+TargetQuarter,ForecastOrigin,ForecastModel,ModelRole,SelectedCandidate,TargetConvention,ActualGDPGrowth,Forecast,ForecastError
+2016-01-01,2016-02-14,Nested selected,V2 adaptive selection,Historical mean,V2 first-release GDP growth,0.536354146854691,2.0567821959358,-1.52042804908111
+2016-01-01,2016-02-14,Persistence,V2 benchmark,,V2 first-release GDP growth,0.536354146854691,0.689061324578462,-0.152707177723771
+2016-01-01,2016-02-14,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,0.536354146854691,3.11485266818834,-2.57849852133365
+2016-01-01,2016-02-14,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,0.536354146854691,3.11485266818833,-2.57849852133364
+2016-04-01,2016-05-15,Nested selected,V2 adaptive selection,Historical mean,V2 first-release GDP growth,1.21087339939213,2.03185714595086,-0.820983746558734
+2016-04-01,2016-05-15,Persistence,V2 benchmark,,V2 first-release GDP growth,1.21087339939213,0.536354146854691,0.674519252537439
+2016-04-01,2016-05-15,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,1.21087339939213,3.30496620237632,-2.09409280298419
+2016-04-01,2016-05-15,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,1.21087339939213,3.30104836701931,-2.09017496762718
+2016-07-01,2016-08-14,Nested selected,V2 adaptive selection,Historical mean,V2 first-release GDP growth,2.86014221371129,2.01861547261927,0.841526741092018
+2016-07-01,2016-08-14,Persistence,V2 benchmark,,V2 first-release GDP growth,2.86014221371129,1.21087339939213,1.64926881431916
+2016-07-01,2016-08-14,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.86014221371129,2.61905315179987,0.24108906191142
+2016-07-01,2016-08-14,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.86014221371129,2.57822496137145,0.28191725233984
+2016-10-01,2016-11-14,Nested selected,V2 adaptive selection,Historical mean,V2 first-release GDP growth,1.85615182260083,2.03197303993819,-0.175821217337362
+2016-10-01,2016-11-14,Persistence,V2 benchmark,,V2 first-release GDP growth,1.85615182260083,2.86014221371129,-1.00399039111046
+2016-10-01,2016-11-14,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,1.85615182260083,3.45068262771943,-1.5945308051186
+2016-10-01,2016-11-14,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,1.85615182260083,3.42219318830518,-1.56604136570435
+2017-01-01,2017-02-14,Nested selected,V2 adaptive selection,Historical mean,V2 first-release GDP growth,0.691710640437483,2.0292258334173,-1.33751519297981
+2017-01-01,2017-02-14,Persistence,V2 benchmark,,V2 first-release GDP growth,0.691710640437483,1.85615182260083,-1.16444118216335
+2017-01-01,2017-02-14,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,0.691710640437483,3.37591430703489,-2.68420366659741
+2017-01-01,2017-02-14,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,0.691710640437483,3.31906568790519,-2.62735504746771
+2017-04-01,2017-05-15,Nested selected,V2 adaptive selection,Historical mean,V2 first-release GDP growth,2.53584188289621,2.00864867660222,0.527193206293988
+2017-04-01,2017-05-15,Persistence,V2 benchmark,,V2 first-release GDP growth,2.53584188289621,0.691710640437483,1.84413124245873
+2017-04-01,2017-05-15,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.53584188289621,3.39155252530562,-0.85571064240941
+2017-04-01,2017-05-15,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.53584188289621,3.30852776125876,-0.77268587836255
+2017-07-01,2017-08-14,Nested selected,V2 adaptive selection,AR(2),V2 first-release GDP growth,2.94516097990012,2.31229372653364,0.632867253366483
+2017-07-01,2017-08-14,Persistence,V2 benchmark,,V2 first-release GDP growth,2.94516097990012,2.53584188289621,0.40931909700391
+2017-07-01,2017-08-14,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.94516097990012,3.30117315571334,-0.35601217581322
+2017-07-01,2017-08-14,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.94516097990012,3.1768874020733,-0.23172642217318
+2017-10-01,2017-11-14,Nested selected,V2 adaptive selection,Historical mean,V2 first-release GDP growth,2.52231893181938,2.03049502749165,0.491823904327727
+2017-10-01,2017-11-14,Persistence,V2 benchmark,,V2 first-release GDP growth,2.52231893181938,2.94516097990012,-0.42284204808074
+2017-10-01,2017-11-14,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.52231893181938,2.69450468980258,-0.1721857579832
+2017-10-01,2017-11-14,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.52231893181938,2.59475300046198,-0.0724340686425999
+2018-01-01,2018-02-14,Nested selected,V2 adaptive selection,Historical mean,V2 first-release GDP growth,2.29195505475066,2.03772773196706,0.254227322783599
+2018-01-01,2018-02-14,Persistence,V2 benchmark,,V2 first-release GDP growth,2.29195505475066,2.52231893181938,-0.23036387706872
+2018-01-01,2018-02-14,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.29195505475066,3.55966393274336,-1.2677088779927
+2018-01-01,2018-02-14,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.29195505475066,3.49676962905359,-1.20481457430293
+2018-04-01,2018-05-15,Nested selected,V2 adaptive selection,AR(1),V2 first-release GDP growth,3.98007549852903,2.15401650269823,1.8260589958308
+2018-04-01,2018-05-15,Persistence,V2 benchmark,,V2 first-release GDP growth,3.98007549852903,2.29195505475066,1.68812044377837
+2018-04-01,2018-05-15,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,3.98007549852903,3.49056553597505,0.48950996255398
+2018-04-01,2018-05-15,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,3.98007549852903,3.40763398407149,0.57244151445754
+2018-07-01,2018-08-14,Nested selected,V2 adaptive selection,AR(2),V2 first-release GDP growth,3.4407481291065,2.92910119325209,0.511646935854412
+2018-07-01,2018-08-14,Persistence,V2 benchmark,,V2 first-release GDP growth,3.4407481291065,3.98007549852903,-0.53932736942253
+2018-07-01,2018-08-14,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,3.4407481291065,2.75252448802475,0.68822364108175
+2018-07-01,2018-08-14,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,3.4407481291065,2.63583455598043,0.80491357312607
+2018-10-01,2018-11-14,Nested selected,V2 adaptive selection,AR(2),V2 first-release GDP growth,2.55616917111533,2.62384858641125,-0.0676794152959226
+2018-10-01,2018-11-14,Persistence,V2 benchmark,,V2 first-release GDP growth,2.55616917111533,3.4407481291065,-0.88457895799117
+2018-10-01,2018-11-14,V1 fixed historical OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.55616917111533,3.07653227220122,-0.52036310108589
+2018-10-01,2018-11-14,V1 expanding OLS,V1 revised-data baseline,,V2 first-release GDP growth,2.55616917111533,2.96994541657629,-0.41377624546096

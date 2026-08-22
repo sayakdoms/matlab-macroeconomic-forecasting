@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "methodologySlice": "V2.1C",
+  "sourceMode": "validated-cache",
+  "sourcePanelChecksumAlgorithm": "SHA-256",
+  "sourcePanelChecksum": "d67b12c981434077398650c2ef48fc1ad88f669d76d2f609e774eb971de6133e",
+  "evaluationStart": "2000-01-01",
+  "evaluationEnd": "2026-04-01",
+  "originRules": [
+    "primary-early-quarter",
+    "strict-quarter-start"
+  ],
+  "forecastOriginCount": 212,
+  "informationSetRowCount": 848,
+  "modelingDatasetRowCount": 212,
+  "gdpRevisionRowCount": 106,
+  "coverageRowCount": 2,
+  "targetDefinition": "First-release annualized quarterly real GDP growth",
+  "latestValueDefinition": "Maximum RealtimeStart available in the validated cache",
+  "raggedEdgeRule": "No imputation; incomplete required observations produce NaN features",
+  "outputChecksums": {
+    "forecastOriginInformationSet": "71e69b2f9b4ef11e064c7c0054b84ff8aff9c5bfd6e774957b4f81ddff9d9a86",
+    "gdpFirstReleaseVsLatest": "bd8d1f180a78bc408f3d1638993af3a3b92ecffd47ffe80a98243360d019b93b",
+    "publicationDelayAssumptions": "e1d3c762b73c8dacb0d8c987138c73cb3a58a51e943f031c548e0c4c60e4448c",
+    "realTimeMacroModelingDataset": "4e10d85f2f68c87ca9f0341134c2f406a527bdc35fbbcaa42dd6f3521d6e409d",
+    "coverageCompletenessSummary": "128ec52a33dff8385be35a56d466aa98ad29fa81051562bf823fb959279b1c5d"
+  }
+}

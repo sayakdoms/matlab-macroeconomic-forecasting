@@ -1,0 +1,17 @@
+Window,ForecastModel,DeclaredStart,DeclaredEnd,Observations,Status,MeanError,RMSE,MAE,MedianAbsoluteError,MASE,HuberLoss,Correlation,SignAccuracyPercent,SignAccuracyMeaningful
+Full finalized outer sample,Nested selected,NaT,NaT,12,reported,0.0969097281913412,0.917404558186646,0.750647665066831,0.580030229830235,0.454705524808224,0.154829438249151,0.45157956145629,100,0
+Full finalized outer sample,Persistence,NaT,NaT,12,reported,0.155592320544739,1.05220534083249,0.888634154471529,0.779549105264304,0.541567759220144,0.205715760149696,0.509326998846633,100,0
+Full finalized outer sample,V1 fixed historical OLS,NaT,NaT,12,reported,-0.892040307147593,1.42358847307486,1.12851075140545,0.77196714174558,0.679456998651656,0.357822207450372,-0.197892540632793,100,0
+Full finalized outer sample,V1 expanding OLS,NaT,NaT,12,reported,-0.824852895929304,1.40554837592026,1.10139828591655,0.78879972574431,0.66304959535762,0.349304255256976,-0.280903084130282,100,0
+Pre-COVID 2016-2019,Nested selected,2016-01-01,2019-10-01,12,unavailable-incomplete-declared-window,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+Pre-COVID 2016-2019,Persistence,2016-01-01,2019-10-01,12,unavailable-incomplete-declared-window,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+Pre-COVID 2016-2019,V1 fixed historical OLS,2016-01-01,2019-10-01,12,unavailable-incomplete-declared-window,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+Pre-COVID 2016-2019,V1 expanding OLS,2016-01-01,2019-10-01,12,unavailable-incomplete-declared-window,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+COVID 2020,Nested selected,2020-01-01,2020-10-01,0,unavailable-incomplete-declared-window,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+COVID 2020,Persistence,2020-01-01,2020-10-01,0,unavailable-incomplete-declared-window,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+COVID 2020,V1 fixed historical OLS,2020-01-01,2020-10-01,0,unavailable-incomplete-declared-window,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+COVID 2020,V1 expanding OLS,2020-01-01,2020-10-01,0,unavailable-incomplete-declared-window,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+Post-COVID 2021+,Nested selected,2021-01-01,NaT,0,unavailable-insufficient-observations,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+Post-COVID 2021+,Persistence,2021-01-01,NaT,0,unavailable-insufficient-observations,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+Post-COVID 2021+,V1 fixed historical OLS,2021-01-01,NaT,0,unavailable-insufficient-observations,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0
+Post-COVID 2021+,V1 expanding OLS,2021-01-01,NaT,0,unavailable-insufficient-observations,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,0

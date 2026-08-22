@@ -1,0 +1,126 @@
+{
+  "manifestVersion": "1.0",
+  "baselineRelease": "v1.0.0",
+  "baselineCommit": "4db1a1e215eb5ff444c6ee8a21bcbc930847d8ed",
+  "files": [
+    {
+      "path": "data/Macroeconomic_Data_Quarterly.csv",
+      "rows": 266,
+      "variables": ["observation_date", "RealGDP", "Unemployment", "CPI", "InterestRate", "GDPGrowth", "Inflation"]
+    },
+    {
+      "path": "results/OLS_Model_Summary.csv",
+      "rows": 1,
+      "variables": ["Observations", "RSquared", "AdjustedRSquared", "ResidualStdError", "FStatistic"]
+    },
+    {
+      "path": "results/Best_Lag_Model_Summary.csv",
+      "rows": 1,
+      "variables": ["BestModel", "Observations", "RSquared", "AdjustedRSquared", "RMSE", "AIC", "BIC", "FStatistic"]
+    },
+    {
+      "path": "results/Dynamic_Model_Summary.csv",
+      "rows": 1,
+      "variables": ["Observations", "RSquared", "AdjustedRSquared", "RMSE", "FStatistic", "AIC", "BIC"]
+    },
+    {
+      "path": "results/Out_of_Sample_Forecast_Summary.csv",
+      "rows": 1,
+      "variables": ["ModelRMSE", "ModelMAE", "ForecastCorrelation", "DirectionalAccuracyPercent", "NaiveRMSE", "NaiveMAE", "RMSEImprovementPercent", "MAEImprovementPercent"]
+    },
+    {
+      "path": "results/Forecast_Robustness_Results.csv",
+      "rows": 4,
+      "variables": ["Regime", "Observations", "ModelRMSE", "NaiveRMSE", "RMSEImprovementPercent", "ModelMAE", "NaiveMAE", "MAEImprovementPercent"]
+    },
+    {
+      "path": "results/Structural_Break_Test.csv",
+      "rows": 1,
+      "variables": ["BreakDate", "ChowFStatistic", "ApproxPValue"]
+    },
+    {
+      "path": "results/Expanding_Window_Model_Leaderboard.csv",
+      "rows": 3,
+      "variables": ["Model", "RMSE", "MAE", "Correlation", "DirectionalAccuracy"]
+    },
+    {
+      "path": "results/Final_Project_KPIs.csv",
+      "rows": 11,
+      "variables": ["Metric", "Value"]
+    }
+  ],
+  "kpis": [
+    {
+      "name": "Baseline R-Squared",
+      "path": "results/OLS_Model_Summary.csv",
+      "row": 1,
+      "variable": "RSquared",
+      "expectedNumber": 0.0197694308583247,
+      "expectedText": "",
+      "absoluteTolerance": 1e-14
+    },
+    {
+      "name": "Selected V1 lag",
+      "path": "results/Best_Lag_Model_Summary.csv",
+      "row": 1,
+      "variable": "BestModel",
+      "expectedNumber": null,
+      "expectedText": "Lag 1",
+      "absoluteTolerance": 0
+    },
+    {
+      "name": "Dynamic R-Squared",
+      "path": "results/Dynamic_Model_Summary.csv",
+      "row": 1,
+      "variable": "RSquared",
+      "expectedNumber": 0.669899592312793,
+      "expectedText": "",
+      "absoluteTolerance": 1e-13
+    },
+    {
+      "name": "Fixed model out-of-sample RMSE",
+      "path": "results/Out_of_Sample_Forecast_Summary.csv",
+      "row": 1,
+      "variable": "ModelRMSE",
+      "expectedNumber": 11.9541442857965,
+      "expectedText": "",
+      "absoluteTolerance": 1e-12
+    },
+    {
+      "name": "Persistence out-of-sample RMSE",
+      "path": "results/Out_of_Sample_Forecast_Summary.csv",
+      "row": 1,
+      "variable": "NaiveRMSE",
+      "expectedNumber": 11.5333506830437,
+      "expectedText": "",
+      "absoluteTolerance": 1e-12
+    },
+    {
+      "name": "Pre-COVID RMSE improvement",
+      "path": "results/Forecast_Robustness_Results.csv",
+      "row": 1,
+      "variable": "RMSEImprovementPercent",
+      "expectedNumber": 5.57903785918579,
+      "expectedText": "",
+      "absoluteTolerance": 1e-12
+    },
+    {
+      "name": "Fixed 2020 break F-statistic",
+      "path": "results/Structural_Break_Test.csv",
+      "row": 1,
+      "variable": "ChowFStatistic",
+      "expectedNumber": 12.4343769850432,
+      "expectedText": "",
+      "absoluteTolerance": 1e-12
+    },
+    {
+      "name": "Expanding-window RMSE",
+      "path": "results/Expanding_Window_Model_Leaderboard.csv",
+      "row": 2,
+      "variable": "RMSE",
+      "expectedNumber": 11.7874959871121,
+      "expectedText": "",
+      "absoluteTolerance": 1e-12
+    }
+  ]
+}
